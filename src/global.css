@@ -5,3 +5,7 @@
 		@apply flex justify-center items-center;
 	}
 }
+
+body {
+    background-color: #383A3E;
+}

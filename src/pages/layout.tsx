@@ -1,4 +1,5 @@
 import React from 'react'
+import NavBar from '../components/NavBar'
 
 const MainLayout = ({
 	children,
@@ -7,8 +8,9 @@ const MainLayout = ({
 }): React.ReactNode => {
 	return (
 		<div>
-			<div>Main Layout</div>
+			<NavBar />
 			<div>{children}</div>
+			<div>Footer</div>
 		</div>
 	)
 }
