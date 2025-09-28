@@ -66,8 +66,6 @@ const Page = () => {
 		players,
 		config,
 		error,
-		opponentCaretIdx,
-		opponentWordIdx,
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
@@ -127,7 +125,7 @@ const Page = () => {
 							{players &&
 								players.map(player => (
 									<div className='h-28 bg-gray-200 rounded-xl p-5 text-black'>
-										Player: {player.name}
+										Player: {player.playerName}
 									</div>
 								))}
 						</div>
@@ -145,9 +143,6 @@ const Page = () => {
 				</aside>
 			</main>
 
-			<div>
-				opponent caret: {opponentCaretIdx} word: {opponentWordIdx}
-			</div>
 			{roomId && words && <MainGameContainer words={words} />}
 		</div>
 	)

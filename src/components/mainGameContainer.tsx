@@ -16,10 +16,13 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const [caretIdx, setCaretIdx] = useState(-1)
 
-	const { updateOpponentCaret, roomId, opponentCaretIdx, opponentWordIdx } =
-		useGameStore()
+	const { updateCaret, roomId, players, socket } = useGameStore()
 
-	const caretRef = useRef<HTMLSpanElement>(null)
+	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
+
+	useEffect(() => {
+		caretRefs.current = Array.from({ length: 4 }, () => null)
+	}, [])
 
 	const handleSpacePress = () => {
 		if (typed.trim() === '') return
@@ -50,50 +53,70 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 		setCurrentWord(words[0])
 		setWordResults([])
 		setCaretIdx(-1)
-		if (roomId) updateOpponentCaret(-1, 0, roomId)
+		if (roomId) {
+			updateCaret({ caretIdx: -1, wordIdx: 0 }, roomId)
+		}
 	}
 
 	useEffect(() => {
 		if (!roomId) return
 		if (caretIdx !== -1 || currentWordIdx !== 0) {
-			updateOpponentCaret(caretIdx, currentWordIdx, roomId)
+			updateCaret({ caretIdx, wordIdx: currentWordIdx }, roomId)
 		}
-	}, [caretIdx, currentWordIdx, roomId, updateOpponentCaret])
+	}, [caretIdx, currentWordIdx, roomId, updateCaret])
 
 	useEffect(() => {
-		if (!caretRef.current) return
+		if (!socket) return
 
-		let target: HTMLElement | null = null
+		const otherPlayers = players.filter(p => p.id !== socket.id)
 
-		if (opponentCaretIdx === -1) {
+		otherPlayers.forEach((player, playerIndex) => {
+			const caretElement = caretRefs.current[playerIndex]
+			if (!caretElement) return
+
+			const caret = player.progress?.caret
+			if (!caret) return
+
+			const { caretIdx: playerCaretIdx, wordIdx: playerWordIdx } = caret
+			let target: HTMLElement | null = null
+
+			if (playerCaretIdx === -1) {
+				target = containerRef.current?.querySelector(
+					`[data-word="${playerWordIdx}"][data-char="0"]`
+				) as HTMLElement | null
+
+				if (target) {
+					const state = Flip.getState(caretElement)
+					target.parentNode?.insertBefore(caretElement, target)
+					Flip.from(state, {
+						duration: 0.4,
+						ease: 'power1.inOut',
+					})
+				}
+				return
+			}
+
 			target = containerRef.current?.querySelector(
-				`[data-word="${opponentWordIdx}"][data-char="0"]`
+				`[data-word="${playerWordIdx}"][data-char="${playerCaretIdx}"]`
 			) as HTMLElement | null
 
-			if (target) {
-				const state = Flip.getState(caretRef.current)
-				target.parentNode?.insertBefore(caretRef.current, target)
-				Flip.from(state, {
-					duration: 0.4,
-					ease: 'power1.inOut',
-				})
-			}
-			return
-		}
+			if (!target) return
 
-		target = containerRef.current?.querySelector(
-			`[data-word="${opponentWordIdx}"][data-char="${opponentCaretIdx}"]`
-		) as HTMLElement | null
-
-		if (!target) return
-
-		const state = Flip.getState(caretRef.current)
-		target.appendChild(caretRef.current)
-		Flip.from(state, {
-			duration: 0.4,
-			ease: 'power1.inOut',
+			const state = Flip.getState(caretElement)
+			target.appendChild(caretElement)
+			Flip.from(state, {
+				duration: 0.4,
+				ease: 'power1.inOut',
+			})
 		})
-	}, [opponentCaretIdx, opponentWordIdx])
+	}, [players, socket])
+
+	const getPlayerColor = (playerIndex: number) => {
+		const colors = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b']
+		return colors[playerIndex] || '#6b7280'
+	}
+
+	const otherPlayers = socket ? players.filter(p => p.id !== socket.id) : []
 
 	return (
 		<div>
@@ -104,6 +127,22 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 			<p>
 				Caret index: {caretIdx} Word index: {currentWordIdx}
 			</p>
+			<p>Players: {players.length}/4</p>
+
+			<div className='mb-4'>
+				{otherPlayers.map((player, index) => {
+					const caret = player.progress?.caret
+					return (
+						<div key={player.id} className='text-sm'>
+							<span style={{ color: getPlayerColor(index) }}>
+								{player.playerName}
+							</span>
+							: Word {caret?.wordIdx ?? 0}, Position {caret?.caretIdx ?? -1}
+						</div>
+					)
+				})}
+			</div>
+
 			<Button onClick={handleReset}>Reset</Button>
 			<div
 				ref={containerRef}
@@ -189,7 +228,17 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 					</span>
 				))}
 
-				<Caret ref={caretRef} isOpponent playerName='hi' />
+				{otherPlayers.map((player, playerIndex) => (
+					<Caret
+						key={player.id}
+						ref={el => {
+							caretRefs.current[playerIndex] = el
+						}}
+						isOpponent
+						playerName={player.playerName}
+						color={getPlayerColor(playerIndex)}
+					/>
+				))}
 			</div>
 		</div>
 	)

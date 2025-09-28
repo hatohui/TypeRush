@@ -1,9 +1,17 @@
 import { create } from 'zustand'
 import { io, Socket } from 'socket.io-client'
 
+interface Caret {
+	caretIdx: number
+	wordIdx: number
+}
+
 interface Player {
 	id: string
-	name: string
+	playerName: string
+	progress: {
+		caret: Caret
+	}
 }
 
 interface GameConfig {
@@ -22,12 +30,6 @@ interface Error {
 	message: string
 }
 
-interface Caret {
-	caretIdx: number
-	wordIdx: number
-	playerId: string
-}
-
 interface GameState {
 	socket: Socket | null
 	roomId: string | null
@@ -36,18 +38,11 @@ interface GameState {
 	connected: boolean
 	playerName: string | null
 	error: Error
-	opponentCaretIdx: number
-	opponentWordIdx: number
 
 	connect: () => void
 	createRoom: (playerName: string) => void
 	joinRoom: (roomId: string, name: string) => void
-	updateProgress: (progress: number) => void
-	updateOpponentCaret: (
-		caretIdx: number,
-		wordIdx: number,
-		roomId: string
-	) => void
+	updateCaret: (caret: Caret, roomId: string) => void
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -58,8 +53,6 @@ export const useGameStore = create<GameState>((set, get) => ({
 	connected: false,
 	playerName: null,
 	error: { type: '', message: '' },
-	opponentCaretIdx: -1,
-	opponentWordIdx: 0,
 
 	connect: () => {
 		if (get().socket) return
@@ -91,10 +84,24 @@ export const useGameStore = create<GameState>((set, get) => ({
 			set({ players })
 		})
 
-		socket.on('updateCaretFromServer', (caret: Caret) => {
-			if (caret.playerId === socket.id) return
-			set({ opponentWordIdx: caret.wordIdx, opponentCaretIdx: caret.caretIdx })
-		})
+		socket.on(
+			'updateCaretFromServer',
+			(payload: { playerId: string; caret: Caret }) => {
+				set(state => ({
+					players: state.players.map(p =>
+						p.id === payload.playerId
+							? {
+									...p,
+									progress: {
+										...p.progress,
+										caret: payload.caret,
+									},
+								}
+							: p
+					),
+				}))
+			}
+		)
 
 		socket.on('disconnect', () => {
 			set({
@@ -108,18 +115,27 @@ export const useGameStore = create<GameState>((set, get) => ({
 	},
 
 	createRoom: (playerName: string) => {
-		get().socket?.emit('createRoom', { name: playerName })
+		get().socket?.emit('createRoom', { playerName: playerName })
 	},
 
-	joinRoom: (roomId: string, name: string) => {
-		get().socket?.emit('joinRoom', { roomId, name })
+	joinRoom: (roomId: string, playerName: string) => {
+		get().socket?.emit('joinRoom', { roomId, playerName })
 	},
 
-	updateProgress: (progress: number) => {
-		get().socket?.emit('updateProgress', progress)
-	},
+	updateCaret: (caret: Caret, roomId: string) => {
+		const socket = get().socket
+		if (!socket) return
 
-	updateOpponentCaret: (caretIdx: number, wordIdx: number, roomId: string) => {
-		get().socket?.emit('caretUpdate', { caretIdx, wordIdx, roomId })
+		set(state => ({
+			players: state.players.map(p =>
+				p.id === socket.id ? { ...p, progress: { caret } } : p
+			),
+		}))
+
+		socket.emit('caretUpdate', {
+			caretIdx: caret.caretIdx,
+			wordIdx: caret.wordIdx,
+			roomId,
+		})
 	},
 }))
