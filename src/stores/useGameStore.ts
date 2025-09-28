@@ -30,11 +30,13 @@ interface GameState {
 	connected: boolean
 	playerName: string | null
 	error: Error
+	currentText: string
 
 	connect: () => void
 	createRoom: (playerName: string) => void
 	joinRoom: (roomId: string, name: string) => void
 	updateProgress: (progress: number) => void
+	updateSharedTextbox: (input: string, roomId: string) => void
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -45,6 +47,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 	connected: false,
 	playerName: null,
 	error: { type: '', message: '' },
+	currentText: '',
 
 	connect: () => {
 		if (get().socket) return
@@ -76,6 +79,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 			set({ players })
 		})
 
+		socket.on('updateTextbox', (text: string) => {
+			set({ currentText: text })
+		})
+
 		socket.on('disconnect', () => {
 			set({
 				connected: false,
@@ -97,5 +104,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 	updateProgress: (progress: number) => {
 		get().socket?.emit('updateProgress', progress)
+	},
+
+	updateSharedTextbox: (input: string, roomId: string) => {
+		get().socket?.emit('updateSharedTextbox', { input, roomId })
 	},
 }))

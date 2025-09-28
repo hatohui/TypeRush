@@ -12,6 +12,8 @@ const Page = () => {
 		players,
 		config,
 		error,
+		updateSharedTextbox,
+		currentText,
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
@@ -88,6 +90,15 @@ const Page = () => {
 					<h2 className='text-sm font-semibold'>Lobby Settings</h2>
 				</aside>
 			</main>
+
+			{roomId && (
+				<input
+					type='text'
+					className='border border-black'
+					onChange={e => updateSharedTextbox(e.target.value, roomId)}
+					value={currentText}
+				/>
+			)}
 		</div>
 	)
 }
