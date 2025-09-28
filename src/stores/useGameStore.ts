@@ -22,6 +22,12 @@ interface Error {
 	message: string
 }
 
+interface Caret {
+	caretIdx: number
+	wordIdx: number
+	playerId: string
+}
+
 interface GameState {
 	socket: Socket | null
 	roomId: string | null
@@ -30,13 +36,18 @@ interface GameState {
 	connected: boolean
 	playerName: string | null
 	error: Error
-	currentText: string
+	opponentCaretIdx: number
+	opponentWordIdx: number
 
 	connect: () => void
 	createRoom: (playerName: string) => void
 	joinRoom: (roomId: string, name: string) => void
 	updateProgress: (progress: number) => void
-	updateSharedTextbox: (input: string, roomId: string) => void
+	updateOpponentCaret: (
+		caretIdx: number,
+		wordIdx: number,
+		roomId: string
+	) => void
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -47,7 +58,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 	connected: false,
 	playerName: null,
 	error: { type: '', message: '' },
-	currentText: '',
+	opponentCaretIdx: -1,
+	opponentWordIdx: 0,
 
 	connect: () => {
 		if (get().socket) return
@@ -79,8 +91,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 			set({ players })
 		})
 
-		socket.on('updateTextbox', (text: string) => {
-			set({ currentText: text })
+		socket.on('updateCaretFromServer', (caret: Caret) => {
+			if (caret.playerId === socket.id) return
+			set({ opponentWordIdx: caret.wordIdx, opponentCaretIdx: caret.caretIdx })
 		})
 
 		socket.on('disconnect', () => {
@@ -106,7 +119,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 		get().socket?.emit('updateProgress', progress)
 	},
 
-	updateSharedTextbox: (input: string, roomId: string) => {
-		get().socket?.emit('updateSharedTextbox', { input, roomId })
+	updateOpponentCaret: (caretIdx: number, wordIdx: number, roomId: string) => {
+		get().socket?.emit('caretUpdate', { caretIdx, wordIdx, roomId })
 	},
 }))

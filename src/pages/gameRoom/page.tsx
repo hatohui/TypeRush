@@ -1,6 +1,60 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../../stores/useGameStore.ts'
 import JoinRoomModal from '../../components/joinRoomModal.tsx'
+import MainGameContainer from '../../components/mainGameContainer.tsx'
+
+const words: string[] = [
+	'umbrella',
+	'night',
+	'ocean',
+	'kangaroo',
+	'lion',
+	'ant',
+	'fish',
+	'sun',
+	'xylophone',
+	'train',
+	'hat',
+	'mountain',
+	'village',
+	'ice',
+	'frog',
+	'yacht',
+	'quilt',
+	'zebra',
+	'gold',
+	'juice',
+	'river',
+	'cat',
+	'lemon',
+	'dog',
+	'egg',
+	'xenon',
+	'ball',
+	'road',
+	'unicorn',
+	'pear',
+	'zoo',
+	'orange',
+	'violet',
+	'star',
+	'island',
+	'desk',
+	'elephant',
+	'grape',
+	'queen',
+	'nest',
+	'yellow',
+	'wolf',
+	'tree',
+	'house',
+	'banana',
+	'cherry',
+	'pumpkin',
+	'jungle',
+	'monkey',
+	'kite',
+]
 
 const Page = () => {
 	const {
@@ -12,8 +66,8 @@ const Page = () => {
 		players,
 		config,
 		error,
-		updateSharedTextbox,
-		currentText,
+		opponentCaretIdx,
+		opponentWordIdx,
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
@@ -91,14 +145,10 @@ const Page = () => {
 				</aside>
 			</main>
 
-			{roomId && (
-				<input
-					type='text'
-					className='border border-black'
-					onChange={e => updateSharedTextbox(e.target.value, roomId)}
-					value={currentText}
-				/>
-			)}
+			<div>
+				opponent caret: {opponentCaretIdx} word: {opponentWordIdx}
+			</div>
+			{roomId && words && <MainGameContainer words={words} />}
 		</div>
 	)
 }
