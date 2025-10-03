@@ -1,4 +1,4 @@
-import { Button } from 'antd'
+import { Button, Modal } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../stores/useGameStore.ts'
 import Caret from './Caret.tsx'
@@ -11,6 +11,8 @@ interface MainGameContainerProps {
 	mode: 'practice' | 'multiplayer'
 }
 
+const GAME_DURATION = [15, 30, 60]
+
 const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	const [localWords, setLocalWords] = useState<string[]>(words)
 	const [currentWordIdx, setCurrentWordIdx] = useState(0)
@@ -21,10 +23,22 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
 	const containerRef = useRef<HTMLDivElement>(null)
 	const [caretIdx, setCaretIdx] = useState(-1)
-	const [charTyped, setCharTyped] = useState<string[][]>([])
-	const [finalText, setFinalText] = useState<string[][]>([])
 	const [correctCharCount, setCorrectCharCount] = useState<number>(0)
 	const [wrongCharCount, setWrongCharCount] = useState<number>(0)
+	const [selectedDuration, setSelectedDuration] = useState<number>(
+		GAME_DURATION[0]
+	)
+	const [startTime, setStartTime] = useState<number | null>(null)
+	const [elapsedTime, setElapsedTime] = useState<number>(0)
+	const [remainingTime, setRemainingTime] = useState<number>(selectedDuration)
+	const timerRef = useRef<NodeJS.Timeout | null>(null)
+	const [results, setResults] = useState<null | {
+		accuracy: number
+		wpm: number
+		rawWpm: number
+		correct: number
+		incorrect: number
+	}>(null)
 
 	const { updateCaret, roomId, players, socket } = useGameStore()
 
@@ -34,23 +48,58 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		caretRefs.current = Array.from({ length: 4 }, () => null)
 	}, [])
 
+	useEffect(() => {
+		if (!startTime) return
+
+		timerRef.current = setInterval(() => {
+			setElapsedTime(Date.now() - startTime)
+			setRemainingTime(prev => prev - 1)
+		}, 1000)
+
+		return () => {
+			if (timerRef.current) {
+				clearInterval(timerRef.current)
+				timerRef.current = null
+			}
+		}
+	}, [startTime])
+
+	const calculateStats = () => {
+		let correct = 0
+		let incorrect = 0
+
+		Object.values(wordResults).forEach(results => {
+			results.forEach(r => {
+				if (r === 'correct') correct++
+				if (r === 'incorrect') incorrect++
+			})
+		})
+
+		const totalTyped = correct + incorrect
+		const accuracy = totalTyped > 0 ? (correct / totalTyped) * 100 : 0
+		const timeInMinutes = selectedDuration / 60
+		const wpm = correct / 5 / timeInMinutes
+		const rawWpm = totalTyped / 5 / timeInMinutes
+
+		return { accuracy, wpm, rawWpm, correct, incorrect }
+	}
+
 	const handleSpacePress = () => {
 		if (typed.trim() === '') return
 		setCaretIdx(-1)
-		const currentResults = localWords[currentWordIdx]
-			.split('')
-			.map((char, idx) => {
-				if (idx < typed.length) {
-					return typed[idx] === char ? 'correct' : 'incorrect'
-				}
-				return 'untyped'
-			})
 
-		// Track overflow separately
+		const currentResults = words[currentWordIdx].split('').map((char, idx) => {
+			if (idx < typed.length) {
+				return typed[idx] === char ? 'correct' : 'incorrect'
+			}
+			return 'untyped'
+		})
+
 		if (typed.length > words[currentWordIdx].length) {
-			// All overflow characters are incorrect
 			const overflowCount = typed.length - words[currentWordIdx].length
-			currentResults.push(...Array(overflowCount).fill('incorrect'))
+			for (let i = 0; i < overflowCount; i++) {
+				currentResults.push('incorrect')
+			}
 		}
 
 		setWordResults(prev => ({
@@ -76,7 +125,20 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		if (roomId) {
 			updateCaret({ caretIdx: -1, wordIdx: 0 }, roomId)
 		}
+		if (timerRef.current) {
+			clearInterval(timerRef.current)
+			timerRef.current = null
+		}
+		setRemainingTime(selectedDuration)
 	}
+
+	useEffect(() => {
+		if (remainingTime === 0) {
+			const stats = calculateStats()
+			setResults(stats)
+			handleReset()
+		}
+	}, [remainingTime])
 
 	useEffect(() => {
 		if (!roomId) return
@@ -157,8 +219,6 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			`[data-word="${currentWordIdx}"][data-char="${caretIdx}"]`
 		) as HTMLElement | null
 
-		console.log(target)
-
 		if (!target) return
 
 		const state = Flip.getState(caretElement)
@@ -206,6 +266,22 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			</div>
 
 			<Button onClick={handleReset}>Reset</Button>
+			<div>
+				Duration:{' '}
+				{GAME_DURATION &&
+					GAME_DURATION.map((duration, idx) => {
+						return (
+							<span
+								onClick={() => setSelectedDuration(duration)}
+								key={idx}
+								className={`${duration === selectedDuration ? 'font-bold text-yellow' : ''} mr-2 cursor-pointer`}
+							>
+								{duration}
+							</span>
+						)
+					})}
+			</div>
+			<div>Elapsed time: {remainingTime}</div>
 			<div
 				ref={containerRef}
 				tabIndex={0}
@@ -256,12 +332,14 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 									} else {
 										setCaretIdx(prev => prev + 1)
 									}
+									if (!startTime) {
+										setStartTime(Date.now())
+									}
 								}}
 								onChange={e => {
 									const value = e.target.value.replace(/ /g, '')
 									setTyped(value)
 
-									// handle overflow: when user types beyond original word
 									if (
 										value.length > words[currentWordIdx].length &&
 										value.length > localWords[currentWordIdx].length
@@ -325,6 +403,26 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 					/>
 				))}
 			</div>
+			<Modal
+				open={!!results}
+				onCancel={() => setResults(null)}
+				footer={[
+					<Button key='close' onClick={() => setResults(null)}>
+						Close
+					</Button>,
+				]}
+				title='Your Results'
+			>
+				{results && (
+					<div>
+						<p>Accuracy: {results.accuracy.toFixed(1)}%</p>
+						<p>WPM: {results.wpm.toFixed(1)}</p>
+						<p>Raw WPM: {results.rawWpm.toFixed(1)}</p>
+						<p>Correct chars: {results.correct}</p>
+						<p>Incorrect chars: {results.incorrect}</p>
+					</div>
+				)}
+			</Modal>
 		</div>
 	)
 }
