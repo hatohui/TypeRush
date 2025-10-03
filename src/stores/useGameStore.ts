@@ -1,12 +1,6 @@
 import { create } from 'zustand'
 import { io } from 'socket.io-client'
-import type {
-	Caret,
-	Player,
-	GameState,
-	Room,
-	Error,
-} from '../common/types.ts'
+import type { Caret, Player, GameState, Room, Error } from '../common/types.ts'
 
 export const useGameStore = create<GameState>((set, get) => ({
 	socket: null,

@@ -6,15 +6,25 @@ import { gsap } from 'gsap'
 import { Flip } from 'gsap/Flip'
 gsap.registerPlugin(Flip)
 
-const MainGameContainer = ({ words }: { words: string[] }) => {
+interface MainGameContainerProps {
+	words: string[]
+	mode: 'practice' | 'multiplayer'
+}
+
+const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
+	const [localWords, setLocalWords] = useState<string[]>(words)
 	const [currentWordIdx, setCurrentWordIdx] = useState(0)
 	const [currentWord, setCurrentWord] = useState<string | null>(
-		words[currentWordIdx]
+		localWords[currentWordIdx]
 	)
 	const [typed, setTyped] = useState<string>('')
 	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
 	const containerRef = useRef<HTMLDivElement>(null)
 	const [caretIdx, setCaretIdx] = useState(-1)
+	const [charTyped, setCharTyped] = useState<string[][]>([])
+	const [finalText, setFinalText] = useState<string[][]>([])
+	const [correctCharCount, setCorrectCharCount] = useState<number>(0)
+	const [wrongCharCount, setWrongCharCount] = useState<number>(0)
 
 	const { updateCaret, roomId, players, socket } = useGameStore()
 
@@ -27,12 +37,21 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 	const handleSpacePress = () => {
 		if (typed.trim() === '') return
 		setCaretIdx(-1)
-		const currentResults = words[currentWordIdx].split('').map((char, idx) => {
-			if (idx < typed.length) {
-				return typed[idx] === char ? 'correct' : 'incorrect'
-			}
-			return 'untyped'
-		})
+		const currentResults = localWords[currentWordIdx]
+			.split('')
+			.map((char, idx) => {
+				if (idx < typed.length) {
+					return typed[idx] === char ? 'correct' : 'incorrect'
+				}
+				return 'untyped'
+			})
+
+		// Track overflow separately
+		if (typed.length > words[currentWordIdx].length) {
+			// All overflow characters are incorrect
+			const overflowCount = typed.length - words[currentWordIdx].length
+			currentResults.push(...Array(overflowCount).fill('incorrect'))
+		}
 
 		setWordResults(prev => ({
 			...prev,
@@ -41,7 +60,7 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 
 		setCurrentWordIdx(prev => {
 			const nextIdx = prev + 1
-			setCurrentWord(words[nextIdx] ?? null)
+			setCurrentWord(localWords[nextIdx] ?? null)
 			return nextIdx
 		})
 		setTyped('')
@@ -50,9 +69,10 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 	const handleReset = () => {
 		setCurrentWordIdx(0)
 		setTyped('')
-		setCurrentWord(words[0])
+		setCurrentWord(localWords[0])
 		setWordResults([])
 		setCaretIdx(-1)
+		setLocalWords(words)
 		if (roomId) {
 			updateCaret({ caretIdx: -1, wordIdx: 0 }, roomId)
 		}
@@ -111,6 +131,48 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 		})
 	}, [players, socket])
 
+	useEffect(() => {
+		const caretElement = caretRefs.current[3]
+		if (!caretElement) return
+
+		let target: HTMLElement | null = null
+
+		if (caretIdx === -1) {
+			target = containerRef.current?.querySelector(
+				`[data-word="${currentWordIdx}"][data-char="0"]`
+			) as HTMLElement | null
+
+			if (target) {
+				const state = Flip.getState(caretElement)
+				target.parentNode?.insertBefore(caretElement, target)
+				Flip.from(state, {
+					duration: 0.4,
+					ease: 'power1.inOut',
+				})
+			}
+			return
+		}
+
+		target = containerRef.current?.querySelector(
+			`[data-word="${currentWordIdx}"][data-char="${caretIdx}"]`
+		) as HTMLElement | null
+
+		console.log(target)
+
+		if (!target) return
+
+		const state = Flip.getState(caretElement)
+		target.appendChild(caretElement)
+		Flip.from(state, {
+			duration: 0.15,
+			ease: 'power1.inOut',
+		})
+	}, [currentWordIdx, caretIdx, localWords])
+
+	useEffect(() => {
+		console.log(wordResults)
+	}, [wordResults])
+
 	const getPlayerColor = (playerIndex: number) => {
 		const colors = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b']
 		return colors[playerIndex] || '#6b7280'
@@ -149,14 +211,14 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 				tabIndex={0}
 				className='h-[400px] text-gray-500 w-[900px] border border-black p-10 flex flex-wrap relative'
 			>
-				{words.map((word, wordIdx) => (
+				{localWords?.map((word, wordIdx) => (
 					<span
 						className={`mr-2 text-3xl ${currentWord === word ? 'text-black' : ''}`}
 						key={wordIdx}
 					>
 						{word === currentWord && (
 							<input
-								className='text-3xl text-transparent caret-white absolute flex focus:outline-none focus:ring-0 focus:border-transparent'
+								className='text-3xl opacity-0 absolute flex focus:outline-none focus:ring-0 focus:border-transparent'
 								autoFocus
 								type='text'
 								value={typed}
@@ -187,17 +249,34 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 										}
 										return
 									}
-									if (words[currentWordIdx][caretIdx + 1] === e.key) {
+									if (mode === 'multiplayer') {
+										if (localWords[currentWordIdx][caretIdx + 1] === e.key) {
+											setCaretIdx(prev => prev + 1)
+										} //allow to next char only typed correctly
+									} else {
 										setCaretIdx(prev => prev + 1)
 									}
 								}}
 								onChange={e => {
 									const value = e.target.value.replace(/ /g, '')
 									setTyped(value)
+
+									// handle overflow: when user types beyond original word
+									if (
+										value.length > words[currentWordIdx].length &&
+										value.length > localWords[currentWordIdx].length
+									) {
+										setLocalWords(prev => {
+											const newLocalWords = [...prev]
+											newLocalWords[currentWordIdx] = value
+											return newLocalWords
+										})
+										setCurrentWord(value)
+									}
 								}}
 							/>
 						)}
-						{word.split('').map((char, idx) => {
+						{word?.split('').map((char, idx) => {
 							let state = ''
 							if (wordIdx < currentWordIdx) {
 								const storedResults = wordResults[wordIdx]
@@ -227,6 +306,12 @@ const MainGameContainer = ({ words }: { words: string[] }) => {
 						})}
 					</span>
 				))}
+				<Caret
+					ref={el => {
+						caretRefs.current[3] = el
+					}}
+					color={getPlayerColor(3)}
+				/>
 
 				{otherPlayers.map((player, playerIndex) => (
 					<Caret
