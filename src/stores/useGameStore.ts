@@ -1,49 +1,12 @@
 import { create } from 'zustand'
-import { io, Socket } from 'socket.io-client'
-
-interface Caret {
-	caretIdx: number
-	wordIdx: number
-}
-
-interface Player {
-	id: string
-	playerName: string
-	progress: {
-		caret: Caret
-	}
-}
-
-interface GameConfig {
-	words: string[]
-	duration: number
-}
-
-interface Room {
-	roomId: string
-	players: Player[]
-	config: GameConfig
-}
-
-interface Error {
-	type: string
-	message: string
-}
-
-interface GameState {
-	socket: Socket | null
-	roomId: string | null
-	players: Player[]
-	config: GameConfig | null
-	connected: boolean
-	playerName: string | null
-	error: Error
-
-	connect: () => void
-	createRoom: (playerName: string) => void
-	joinRoom: (roomId: string, name: string) => void
-	updateCaret: (caret: Caret, roomId: string) => void
-}
+import { io } from 'socket.io-client'
+import type {
+	Caret,
+	Player,
+	GameState,
+	Room,
+	Error,
+} from '../common/types.ts'
 
 export const useGameStore = create<GameState>((set, get) => ({
 	socket: null,

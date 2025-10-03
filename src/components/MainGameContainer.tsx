@@ -1,7 +1,7 @@
 import { Button } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../stores/useGameStore.ts'
-import Caret from './caret.tsx'
+import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
 import { Flip } from 'gsap/Flip'
 gsap.registerPlugin(Flip)

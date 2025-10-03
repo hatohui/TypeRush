@@ -1,4 +1,4 @@
-import MainGameContainer from '../../components/mainGameContainer.tsx'
+import MainGameContainer from '../../components/MainGameContainer.tsx'
 
 const Page = () => {
 	return (

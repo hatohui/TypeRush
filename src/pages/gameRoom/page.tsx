@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../../stores/useGameStore.ts'
-import JoinRoomModal from '../../components/joinRoomModal.tsx'
-import MainGameContainer from '../../components/mainGameContainer.tsx'
+import JoinRoomModal from '../../components/JoinRoomModal.tsx'
+import MainGameContainer from '../../components/MainGameContainer.tsx'
 
 const words: string[] = [
 	'umbrella',
@@ -69,6 +69,7 @@ const Page = () => {
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
+	const [render, setRender] = useState(true)
 
 	const handleOk = (values: { playerName: string; roomId?: string }) => {
 		setConfirmLoading(true)
@@ -132,7 +133,10 @@ const Page = () => {
 					</div>
 
 					<div className='flex justify-center mt-8'>
-						<button className='bg-gray-200 text-black px-8 py-2 rounded'>
+						<button
+							onClick={() => setRender(!render)}
+							className='bg-gray-200 text-black px-8 py-2 rounded'
+						>
 							START
 						</button>
 					</div>
@@ -143,7 +147,7 @@ const Page = () => {
 				</aside>
 			</main>
 
-			{roomId && words && <MainGameContainer words={words} />}
+			{roomId && words && render && <MainGameContainer words={words} />}
 		</div>
 	)
 }
