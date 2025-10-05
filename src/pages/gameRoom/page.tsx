@@ -117,7 +117,10 @@ const Page = () => {
 						<div className='grid grid-cols-2 gap-6'>
 							{players &&
 								players.map(player => (
-									<div className='h-28 bg-gray-200 rounded-xl p-5 text-black'>
+									<div
+										key={player.id}
+										className='h-28 bg-gray-200 rounded-xl p-5 text-black'
+									>
 										Player: {player.playerName}
 									</div>
 								))}

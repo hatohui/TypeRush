@@ -67,6 +67,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 				players: [],
 				config: null,
 				error: { type: '', message: '' },
+				socket: null,
 			})
 		})
 	},

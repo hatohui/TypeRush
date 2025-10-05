@@ -98,8 +98,8 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	const handleReset = () => {
 		setCurrentWordIdx(0)
 		setTyped('')
-		setCurrentWord(localWords[0])
-		setWordResults([])
+		setCurrentWord(words[0] ?? null)
+		setWordResults({})
 		setCaretIdx(-1)
 		setLocalWords(words)
 		if (roomId) {
@@ -110,6 +110,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			timerRef.current = null
 		}
 		setRemainingTime(selectedDuration)
+		setStartTime(null)
 	}
 
 	useEffect(() => {
