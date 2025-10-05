@@ -1,5 +1,5 @@
 import { Button, Modal } from 'antd'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../stores/useGameStore.ts'
 import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
@@ -44,7 +44,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		return colors[playerIndex] || '#6b7280'
 	}
 
-	const calculateStats = () => {
+	const calculateStats = useCallback(() => {
 		let correct = 0
 		let incorrect = 0
 
@@ -62,7 +62,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		const rawWpm = totalTyped / 5 / timeInMinutes
 
 		return { accuracy, wpm, rawWpm, correct, incorrect }
-	}
+	}, [wordResults, selectedDuration])
 
 	const handleSpacePress = () => {
 		if (typed.trim() === '') return
@@ -95,7 +95,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		setTyped('')
 	}
 
-	const handleReset = () => {
+	const handleReset = useCallback(() => {
 		setCurrentWordIdx(0)
 		setTyped('')
 		setCurrentWord(words[0] ?? null)
@@ -111,7 +111,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		}
 		setRemainingTime(selectedDuration)
 		setStartTime(null)
-	}
+	}, [words, roomId, updateCaret, selectedDuration])
 
 	useEffect(() => {
 		caretRefs.current = Array.from({ length: 4 }, () => null)
@@ -138,7 +138,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			setResults(stats)
 			handleReset()
 		}
-	}, [remainingTime])
+	}, [calculateStats, handleReset, remainingTime])
 
 	useEffect(() => {
 		if (!roomId) return
