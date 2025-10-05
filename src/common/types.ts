@@ -43,3 +43,8 @@ export interface GameState {
 	joinRoom: (roomId: string, name: string) => void
 	updateCaret: (caret: Caret, roomId: string) => void
 }
+
+export interface MainGameContainerProps {
+	words: string[]
+	mode: 'practice' | 'multiplayer'
+}

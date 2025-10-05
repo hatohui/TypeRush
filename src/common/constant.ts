@@ -1,3 +1,0 @@
-const SOCKET_EVENTS = {
-
-}

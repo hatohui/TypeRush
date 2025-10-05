@@ -147,7 +147,9 @@ const Page = () => {
 				</aside>
 			</main>
 
-			{roomId && words && render && <MainGameContainer words={words} mode={'multiplayer'}/>}
+			{roomId && words && render && (
+				<MainGameContainer words={words} mode={'multiplayer'} />
+			)}
 		</div>
 	)
 }

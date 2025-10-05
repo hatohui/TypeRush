@@ -4,34 +4,27 @@ import { useGameStore } from '../stores/useGameStore.ts'
 import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
 import { Flip } from 'gsap/Flip'
+import type { MainGameContainerProps } from '../common/types.ts'
 gsap.registerPlugin(Flip)
-
-interface MainGameContainerProps {
-	words: string[]
-	mode: 'practice' | 'multiplayer'
-}
 
 const GAME_DURATION = [15, 30, 60]
 
 const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
+	const containerRef = useRef<HTMLDivElement>(null)
+	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
+	const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+	const { updateCaret, roomId, players, socket } = useGameStore()
+
 	const [localWords, setLocalWords] = useState<string[]>(words)
 	const [currentWordIdx, setCurrentWordIdx] = useState(0)
 	const [currentWord, setCurrentWord] = useState<string | null>(
 		localWords[currentWordIdx]
 	)
 	const [typed, setTyped] = useState<string>('')
-	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
-	const containerRef = useRef<HTMLDivElement>(null)
 	const [caretIdx, setCaretIdx] = useState(-1)
-	const [correctCharCount, setCorrectCharCount] = useState<number>(0)
-	const [wrongCharCount, setWrongCharCount] = useState<number>(0)
-	const [selectedDuration, setSelectedDuration] = useState<number>(
-		GAME_DURATION[0]
-	)
-	const [startTime, setStartTime] = useState<number | null>(null)
-	const [elapsedTime, setElapsedTime] = useState<number>(0)
-	const [remainingTime, setRemainingTime] = useState<number>(selectedDuration)
-	const timerRef = useRef<NodeJS.Timeout | null>(null)
+	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
+
 	const [results, setResults] = useState<null | {
 		accuracy: number
 		wpm: number
@@ -40,29 +33,16 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		incorrect: number
 	}>(null)
 
-	const { updateCaret, roomId, players, socket } = useGameStore()
+	const [selectedDuration, setSelectedDuration] = useState<number>(
+		GAME_DURATION[0]
+	)
+	const [startTime, setStartTime] = useState<number | null>(null)
+	const [remainingTime, setRemainingTime] = useState<number>(selectedDuration)
 
-	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
-
-	useEffect(() => {
-		caretRefs.current = Array.from({ length: 4 }, () => null)
-	}, [])
-
-	useEffect(() => {
-		if (!startTime) return
-
-		timerRef.current = setInterval(() => {
-			setElapsedTime(Date.now() - startTime)
-			setRemainingTime(prev => prev - 1)
-		}, 1000)
-
-		return () => {
-			if (timerRef.current) {
-				clearInterval(timerRef.current)
-				timerRef.current = null
-			}
-		}
-	}, [startTime])
+	const getPlayerColor = (playerIndex: number) => {
+		const colors = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b']
+		return colors[playerIndex] || '#6b7280'
+	}
 
 	const calculateStats = () => {
 		let correct = 0
@@ -133,6 +113,25 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	}
 
 	useEffect(() => {
+		caretRefs.current = Array.from({ length: 4 }, () => null)
+	}, [])
+
+	useEffect(() => {
+		if (!startTime) return
+
+		timerRef.current = setInterval(() => {
+			setRemainingTime(prev => prev - 1)
+		}, 1000)
+
+		return () => {
+			if (timerRef.current) {
+				clearInterval(timerRef.current)
+				timerRef.current = null
+			}
+		}
+	}, [startTime])
+
+	useEffect(() => {
 		if (remainingTime === 0) {
 			const stats = calculateStats()
 			setResults(stats)
@@ -147,6 +146,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		}
 	}, [caretIdx, currentWordIdx, roomId, updateCaret])
 
+	// Animate opponent carets
 	useEffect(() => {
 		if (!socket) return
 
@@ -193,6 +193,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		})
 	}, [players, socket])
 
+	// Animate own caret
 	useEffect(() => {
 		const caretElement = caretRefs.current[3]
 		if (!caretElement) return
@@ -228,15 +229,6 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			ease: 'power1.inOut',
 		})
 	}, [currentWordIdx, caretIdx, localWords])
-
-	useEffect(() => {
-		console.log(wordResults)
-	}, [wordResults])
-
-	const getPlayerColor = (playerIndex: number) => {
-		const colors = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b']
-		return colors[playerIndex] || '#6b7280'
-	}
 
 	const otherPlayers = socket ? players.filter(p => p.id !== socket.id) : []
 
