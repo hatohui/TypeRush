@@ -12,7 +12,7 @@ const GAME_DURATION = [15, 30, 60]
 const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
-	const timerRef = useRef<NodeJS.Timeout | null>(null)
+	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
 	const { updateCaret, roomId, players, socket } = useGameStore()
 
