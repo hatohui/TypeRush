@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { io } from 'socket.io-client'
-import type { Caret, Player, GameState, Room, Error } from '../common/types.ts'
+import type {
+	Caret,
+	Player,
+	GameState,
+	Room,
+	GameError,
+} from '../common/types.ts'
 
 export const useGameStore = create<GameState>((set, get) => ({
 	socket: null,
@@ -13,7 +19,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 	connect: () => {
 		if (get().socket) return
-		const socket = io('http://localhost:3000')
+		const socket = io(
+			import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000'
+		)
 		set({ socket })
 
 		socket.on('connect', () => {
@@ -33,7 +41,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 			})
 		})
 
-		socket.on('errorEvent', (err: Error) => {
+		socket.on('errorEvent', (err: GameError) => {
 			set({ error: err })
 		})
 

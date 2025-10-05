@@ -24,7 +24,7 @@ export interface Room {
 	config: GameConfig
 }
 
-export interface Error {
+export interface GameError {
 	type: string
 	message: string
 }
@@ -36,7 +36,7 @@ export interface GameState {
 	config: GameConfig | null
 	connected: boolean
 	playerName: string | null
-	error: Error
+	error: GameError
 
 	connect: () => void
 	createRoom: (playerName: string) => void
