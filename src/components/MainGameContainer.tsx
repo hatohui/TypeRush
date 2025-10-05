@@ -319,7 +319,8 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 										return
 									}
 									if (mode === 'multiplayer') {
-										if (localWords[currentWordIdx][caretIdx + 1] === e.key) {
+										const nextChar = localWords[currentWordIdx]?.[caretIdx + 1]
+										if (nextChar && nextChar === e.key) {
 											setCaretIdx(prev => prev + 1)
 										} //allow to next char only typed correctly
 									} else {
