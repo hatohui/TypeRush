@@ -1,6 +1,18 @@
 import { Form, Input, Button, Modal } from 'antd'
 
-const JoinRoomModal = ({ open, onOk, confirmLoading, error }: any) => {
+interface JoinRoomModalProps {
+	open: boolean
+	onOk: (values: { playerName: string; roomId?: string }) => void
+	confirmLoading: boolean
+	error: { type: string; message: string }
+}
+
+const JoinRoomModal = ({
+	open,
+	onOk,
+	confirmLoading,
+	error,
+}: JoinRoomModalProps) => {
 	const [form] = Form.useForm()
 
 	const handleFinish = (values: { playerName: string; roomId?: string }) => {

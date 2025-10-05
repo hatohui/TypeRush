@@ -57,16 +57,8 @@ const words: string[] = [
 ]
 
 const Page = () => {
-	const {
-		connect,
-		createRoom,
-		joinRoom,
-		connected,
-		roomId,
-		players,
-		config,
-		error,
-	} = useGameStore()
+	const { connect, createRoom, joinRoom, connected, roomId, players, error } =
+		useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
 	const [render, setRender] = useState(true)
