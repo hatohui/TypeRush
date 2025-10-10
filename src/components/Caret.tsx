@@ -4,12 +4,13 @@ interface CaretProps {
 	isOpponent?: boolean
 	playerName?: string
 	color?: string
+	className?: string
 }
 
 const Caret = forwardRef<HTMLSpanElement, CaretProps>(
-	({ isOpponent = false, playerName = 'Player', color = '#3b82f6' }, ref) => {
+	({ isOpponent = false, playerName = 'Player', color = '#3b82f6', className= '' }, ref) => {
 		return (
-			<span className='relative inline-block' ref={ref}>
+			<span className={`relative inline-block ${className}`} ref={ref}>
 				<span
 					className='inline-block w-[1.5px] animate-pulse align-text-bottom'
 					style={{

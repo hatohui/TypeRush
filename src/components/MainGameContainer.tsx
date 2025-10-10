@@ -7,7 +7,7 @@ import { Flip } from 'gsap/Flip'
 import type { MainGameContainerProps } from '../common/types.ts'
 gsap.registerPlugin(Flip)
 
-const GAME_DURATION = [15, 30, 60]
+const GAME_DURATION = [15, 30, 60, 0]
 
 const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	const containerRef = useRef<HTMLDivElement>(null)
@@ -113,6 +113,11 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		setStartTime(null)
 	}, [words, roomId, updateCaret, selectedDuration])
 
+	const handleOnCancelResultsModal = () => {
+		setResults(null)
+		handleReset()
+	}
+
 	useEffect(() => {
 		caretRefs.current = Array.from({ length: 4 }, () => null)
 	}, [])
@@ -121,6 +126,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		if (!startTime) return
 
 		timerRef.current = setInterval(() => {
+			if (remainingTime === 0) return
 			setRemainingTime(prev => prev - 1)
 		}, 1000)
 
@@ -136,9 +142,17 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		if (remainingTime === 0) {
 			const stats = calculateStats()
 			setResults(stats)
-			handleReset()
+			if (timerRef.current) clearInterval(timerRef.current)
 		}
 	}, [calculateStats, handleReset, remainingTime])
+
+	useEffect(() => {
+		if (currentWordIdx === words.length - 1 && caretIdx === words[currentWordIdx].length - 1) {
+			const stats = calculateStats()
+			setResults(stats)
+			if (timerRef.current) clearInterval(timerRef.current)
+		}
+	}, [currentWordIdx, caretIdx, selectedDuration])
 
 	useEffect(() => {
 		if (!roomId) return
@@ -200,7 +214,6 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		if (!caretElement) return
 
 		let target: HTMLElement | null = null
-
 		if (caretIdx === -1) {
 			target = containerRef.current?.querySelector(
 				`[data-word="${currentWordIdx}"][data-char="0"]`
@@ -229,12 +242,18 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			duration: 0.15,
 			ease: 'power1.inOut',
 		})
-	}, [currentWordIdx, caretIdx, localWords])
+	}, [currentWordIdx, caretIdx, localWords, caretRefs.current])
 
 	const otherPlayers = socket ? players.filter(p => p.id !== socket.id) : []
 
 	return (
 		<div>
+			<Caret
+				ref={el => {
+					caretRefs.current[3] = el
+				}}
+				color={getPlayerColor(3)}
+			/>
 			<p>Current id: {currentWordIdx}</p>
 			<p>Current word: {currentWord}</p>
 			<p>Typed: {typed}</p>
@@ -269,7 +288,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 								key={idx}
 								className={`${duration === selectedDuration ? 'font-bold text-yellow' : ''} mr-2 cursor-pointer`}
 							>
-								{duration}
+								{duration === 0 ? 'No time' : duration}
 							</span>
 						)
 					})}
@@ -318,6 +337,18 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 										}
 										return
 									}
+									if (!startTime && selectedDuration !== 0) {
+										setStartTime(Date.now())
+									}
+									if (typed.length >= words[currentWordIdx].length) {
+										const newWord = localWords[currentWordIdx] + e.key
+										setLocalWords(prev => {
+											const newLocalWords = [...prev]
+											newLocalWords[currentWordIdx] = newWord
+											return newLocalWords
+										})
+										setCurrentWord(newWord)
+									}
 									if (mode === 'multiplayer') {
 										const nextChar = localWords[currentWordIdx]?.[caretIdx + 1]
 										if (nextChar && nextChar === e.key) {
@@ -326,25 +357,10 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 									} else {
 										setCaretIdx(prev => prev + 1)
 									}
-									if (!startTime) {
-										setStartTime(Date.now())
-									}
 								}}
 								onChange={e => {
 									const value = e.target.value.replace(/ /g, '')
 									setTyped(value)
-
-									if (
-										value.length > words[currentWordIdx].length &&
-										value.length > localWords[currentWordIdx].length
-									) {
-										setLocalWords(prev => {
-											const newLocalWords = [...prev]
-											newLocalWords[currentWordIdx] = value
-											return newLocalWords
-										})
-										setCurrentWord(value)
-									}
 								}}
 							/>
 						)}
@@ -378,12 +394,6 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 						})}
 					</span>
 				))}
-				<Caret
-					ref={el => {
-						caretRefs.current[3] = el
-					}}
-					color={getPlayerColor(3)}
-				/>
 
 				{otherPlayers.map((player, playerIndex) => (
 					<Caret
@@ -399,9 +409,9 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			</div>
 			<Modal
 				open={!!results}
-				onCancel={() => setResults(null)}
+				onCancel={handleOnCancelResultsModal}
 				footer={[
-					<Button key='close' onClick={() => setResults(null)}>
+					<Button key='close' onClick={handleOnCancelResultsModal}>
 						Close
 					</Button>,
 				]}
