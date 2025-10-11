@@ -38,6 +38,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	)
 	const [startTime, setStartTime] = useState<number | null>(null)
 	const [remainingTime, setRemainingTime] = useState<number>(selectedDuration)
+	const [timeElapsed, setTimeElapsed] = useState<number>(0)
 
 	const getPlayerColor = (playerIndex: number) => {
 		const colors = ['#ef4444', '#22c55e', '#3b82f6', '#f59e0b']
@@ -57,7 +58,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 
 		const totalTyped = correct + incorrect
 		const accuracy = totalTyped > 0 ? (correct / totalTyped) * 100 : 0
-		const timeInMinutes = selectedDuration / 60
+		const timeInMinutes = selectedDuration !== 0 ? selectedDuration / 60 : timeElapsed / 60
 		const wpm = correct / 5 / timeInMinutes
 		const rawWpm = totalTyped / 5 / timeInMinutes
 
@@ -111,12 +112,9 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		}
 		setRemainingTime(selectedDuration)
 		setStartTime(null)
-	}, [words, roomId, updateCaret, selectedDuration])
-
-	const handleOnCancelResultsModal = () => {
+		setTimeElapsed(0)
 		setResults(null)
-		handleReset()
-	}
+	}, [words, roomId, updateCaret, selectedDuration])
 
 	useEffect(() => {
 		caretRefs.current = Array.from({ length: 4 }, () => null)
@@ -126,8 +124,8 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		if (!startTime) return
 
 		timerRef.current = setInterval(() => {
-			if (remainingTime === 0) return
-			setRemainingTime(prev => prev - 1)
+			if (selectedDuration !== 0) setRemainingTime(prev => prev - 1)
+			else setTimeElapsed(prev => prev + 1)
 		}, 1000)
 
 		return () => {
@@ -139,7 +137,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	}, [startTime])
 
 	useEffect(() => {
-		if (remainingTime === 0) {
+		if (remainingTime === 0 && selectedDuration !== 0 && timerRef.current) {
 			const stats = calculateStats()
 			setResults(stats)
 			if (timerRef.current) clearInterval(timerRef.current)
@@ -284,16 +282,19 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 					GAME_DURATION.map((duration, idx) => {
 						return (
 							<span
-								onClick={() => setSelectedDuration(duration)}
+								onClick={() => {
+									setSelectedDuration(duration)
+									setRemainingTime(duration)
+								}}
 								key={idx}
-								className={`${duration === selectedDuration ? 'font-bold text-yellow' : ''} mr-2 cursor-pointer`}
+								className={`${duration === selectedDuration ? 'font-bold text-yellow-400' : ''} mr-2 cursor-pointer`}
 							>
 								{duration === 0 ? 'No time' : duration}
 							</span>
 						)
 					})}
 			</div>
-			<div>Elapsed time: {remainingTime}</div>
+			{selectedDuration !== 0 ? <div>Remaining time: {remainingTime}</div> : <div>Elapsed time: {timeElapsed}</div>}
 			<div
 				ref={containerRef}
 				tabIndex={0}
@@ -337,7 +338,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 										}
 										return
 									}
-									if (!startTime && selectedDuration !== 0) {
+									if (!startTime) {
 										setStartTime(Date.now())
 									}
 									if (typed.length >= words[currentWordIdx].length) {
@@ -351,9 +352,11 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 									}
 									if (mode === 'multiplayer') {
 										const nextChar = localWords[currentWordIdx]?.[caretIdx + 1]
-										if (nextChar && nextChar === e.key) {
+										if (nextChar && nextChar === e.key) { //allow to next char only on typed correctly
 											setCaretIdx(prev => prev + 1)
-										} //allow to next char only typed correctly
+										} else {
+											e.preventDefault()
+										}
 									} else {
 										setCaretIdx(prev => prev + 1)
 									}
@@ -409,9 +412,9 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			</div>
 			<Modal
 				open={!!results}
-				onCancel={handleOnCancelResultsModal}
+				onCancel={handleReset}
 				footer={[
-					<Button key='close' onClick={handleOnCancelResultsModal}>
+					<Button key='close' onClick={handleReset}>
 						Close
 					</Button>,
 				]}
