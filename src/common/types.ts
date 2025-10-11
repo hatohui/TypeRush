@@ -47,6 +47,7 @@ export interface GameState {
 	joinRoom: (roomId: string, name: string) => void
 	updateCaret: (caret: Caret, roomId: string) => void
 	startGame: (roomId: string | null) => void
+	stopGame: (roomId: string | null) => void
 	setIsGameStarted: (isGameStarted: boolean) => void
 	setRenderStartModal: (renderStartModal: boolean) => void
 }

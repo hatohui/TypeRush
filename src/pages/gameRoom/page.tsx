@@ -20,43 +20,6 @@ const words: string[] = [
 	'hat',
 	'mountain',
 	'village',
-	'ice',
-	'frog',
-	'yacht',
-	'quilt',
-	'zebra',
-	'gold',
-	'juice',
-	'river',
-	'cat',
-	'lemon',
-	'dog',
-	'egg',
-	'xenon',
-	'ball',
-	'road',
-	'unicorn',
-	'pear',
-	'zoo',
-	'orange',
-	'violet',
-	'star',
-	'island',
-	'desk',
-	'elephant',
-	'grape',
-	'queen',
-	'nest',
-	'yellow',
-	'wolf',
-	'tree',
-	'house',
-	'banana',
-	'cherry',
-	'pumpkin',
-	'jungle',
-	'monkey',
-	'kite',
 ]
 
 const Page = () => {
@@ -73,7 +36,7 @@ const Page = () => {
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
-	const { renderStartModal, isHost, setIsGameStarted } = useGameStore()
+	const { renderStartModal, isHost, stopGame } = useGameStore()
 
 	const handleOk = (values: { playerName: string; roomId?: string }) => {
 		setConfirmLoading(true)
@@ -133,14 +96,15 @@ const Page = () => {
 										key={player.id}
 										className='h-28 bg-gray-200 rounded-xl p-5 text-black'
 									>
-										Player: {player.playerName}{player.isHost && <PiCrownFill />}
+										Player: {player.playerName}
+										{player.isHost && <PiCrownFill className='inline ml-1' />}
 									</div>
 								))}
 						</div>
 					</div>
 
 					{isHost && (
-						<div className='flex justify-center mt-8'>
+						<div className='flex justify-center mt-8 gap-5'>
 							<Button
 								onClick={() => {
 									startGame(roomId)
@@ -150,8 +114,8 @@ const Page = () => {
 							>
 								START
 							</Button>
-							<Button color='danger' onClick={() => setIsGameStarted(false)}>
-								Stop game
+							<Button danger type='primary' onClick={() => stopGame(roomId)}>
+								STOP
 							</Button>
 						</div>
 					)}

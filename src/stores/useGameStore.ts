@@ -87,6 +87,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 		socket.on('gameStarted', () => {
 			set({ renderStartModal: true })
 		})
+
+		socket.on('gameStopped', () => {
+			set({ isGameStarted: false })
+		})
 	},
 
 	createRoom: (playerName: string) => {
@@ -100,6 +104,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 	startGame: (roomId: string | null) => {
 		if (!roomId) return
 		get().socket?.emit('startGame', { roomId })
+	},
+
+	stopGame: (roomId: string | null) => {
+		if (!roomId) return
+		get().socket?.emit('stopGame', { roomId })
 	},
 
 	setIsGameStarted: (isGameStarted: boolean) => {

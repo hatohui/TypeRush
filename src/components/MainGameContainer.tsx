@@ -13,7 +13,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
 	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-	const { updateCaret, roomId, players, socket, setIsGameStarted } =
+	const { updateCaret, roomId, players, socket } =
 		useGameStore()
 
 	const [localWords, setLocalWords] = useState<string[]>(words)
@@ -34,7 +34,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	}>(null)
 
 	const [selectedDuration, setSelectedDuration] = useState<number>(
-		GAME_DURATION[0]
+		mode === 'multiplayer' ? GAME_DURATION[3] : GAME_DURATION[0]
 	)
 	const [startTime, setStartTime] = useState<number | null>(null)
 	const [remainingTime, setRemainingTime] = useState<number>(selectedDuration)
