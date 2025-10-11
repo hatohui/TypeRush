@@ -6,6 +6,7 @@ import type {
 	GameState,
 	Room,
 	GameError,
+	PlayerStats,
 } from '../common/types.ts'
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -19,6 +20,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 	isGameStarted: false,
 	renderStartModal: false,
 	isHost: false,
+	leaderboard: [],
+	position: null,
 
 	connect: () => {
 		if (get().socket) return
@@ -55,6 +58,18 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 		socket.on('playerUpdated', (players: Player[]) => {
 			set({ players })
+		})
+
+		socket.on('leaderboardUpdated', (playerId: string, stats: PlayerStats) => {
+			const newLeaderboard = get().leaderboard
+			newLeaderboard.push({ playerId, stats })
+			console.log(newLeaderboard)
+			if (playerId === get().socket?.id) {
+				const position = newLeaderboard.findIndex(e => e.playerId === playerId)
+				set({ leaderboard: newLeaderboard, position: position })
+			} else {
+				set({ leaderboard: newLeaderboard })
+			}
 		})
 
 		socket.on('caretUpdated', (payload: { playerId: string; caret: Caret }) => {
@@ -133,6 +148,16 @@ export const useGameStore = create<GameState>((set, get) => ({
 			caretIdx: caret.caretIdx,
 			wordIdx: caret.wordIdx,
 			roomId,
+		})
+	},
+
+	handleFinish: (roomId: string | null, stats: PlayerStats) => {
+		const socket = get().socket
+		if (!socket || !roomId) return
+
+		socket.emit('playerFinished', {
+			roomId,
+			stats,
 		})
 	},
 }))

@@ -13,7 +13,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
 	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-	const { updateCaret, roomId, players, socket } =
+	const { updateCaret, roomId, players, socket, handleFinish, position } =
 		useGameStore()
 
 	const [localWords, setLocalWords] = useState<string[]>(words)
@@ -153,8 +153,17 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			const stats = calculateStats()
 			setResults(stats)
 			if (timerRef.current) clearInterval(timerRef.current)
+			handleFinish(roomId, stats)
 		}
-	}, [currentWordIdx, caretIdx, selectedDuration, words, calculateStats])
+	}, [
+		currentWordIdx,
+		caretIdx,
+		selectedDuration,
+		words,
+		calculateStats,
+		handleFinish,
+		roomId,
+	])
 
 	useEffect(() => {
 		if (!roomId) return
@@ -422,26 +431,51 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 					/>
 				))}
 			</div>
-			<Modal
-				open={!!results}
-				onCancel={handleReset}
-				footer={[
-					<Button key='close' onClick={handleReset}>
-						Close
-					</Button>,
-				]}
-				title='Your Results'
-			>
-				{results && (
-					<div>
-						<p>Accuracy: {results.accuracy.toFixed(1)}%</p>
-						<p>WPM: {results.wpm.toFixed(1)}</p>
-						<p>Raw WPM: {results.rawWpm.toFixed(1)}</p>
-						<p>Correct chars: {results.correct}</p>
-						<p>Incorrect chars: {results.incorrect}</p>
-					</div>
-				)}
-			</Modal>
+			{mode === 'practice' && (
+				<Modal
+					open={!!results}
+					onCancel={handleReset}
+					footer={[
+						<Button key='close' onClick={handleReset}>
+							Close
+						</Button>,
+					]}
+					title='Your Results'
+				>
+					{results && (
+						<div>
+							<p>Accuracy: {results.accuracy.toFixed(1)}%</p>
+							<p>WPM: {results.wpm.toFixed(1)}</p>
+							<p>Raw WPM: {results.rawWpm.toFixed(1)}</p>
+							<p>Correct chars: {results.correct}</p>
+							<p>Incorrect chars: {results.incorrect}</p>
+						</div>
+					)}
+				</Modal>
+			)}
+			{mode === 'multiplayer' && (
+				<Modal
+					open={results != null && position != null}
+					onCancel={handleReset}
+					footer={[
+						<Button key='close' onClick={handleReset}>
+							Close
+						</Button>,
+					]}
+					title='Your Results'
+				>
+					{results && (
+						<div>
+							<p>Accuracy: {results.accuracy.toFixed(1)}%</p>
+							<p>WPM: {results.wpm.toFixed(1)}</p>
+							<p>Raw WPM: {results.rawWpm.toFixed(1)}</p>
+							<p>Correct chars: {results.correct}</p>
+							<p>Incorrect chars: {results.incorrect}</p>
+						</div>
+					)}
+					{position !== null && <p>Position: {position + 1}</p>}
+				</Modal>
+			)}
 		</div>
 	)
 }

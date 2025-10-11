@@ -19,10 +19,24 @@ export interface GameConfig {
 	duration: number
 }
 
-export interface Room {
+export interface PlayerStats {
+	accuracy: number
+	wpm: number
+	rawWpm: number
+	correct: number
+	incorrect: number
+}
+
+export interface RoomLeaderboardEntry {
+	playerId: string
+	stats: PlayerStats
+}
+
+export type Room = {
 	roomId: string
 	players: Player[]
 	config: GameConfig
+	leaderboard: RoomLeaderboardEntry[]
 }
 
 export interface GameError {
@@ -41,6 +55,8 @@ export interface GameState {
 	isGameStarted: boolean
 	renderStartModal: boolean
 	isHost: boolean
+	leaderboard: RoomLeaderboardEntry[]
+	position: number | null
 
 	connect: () => void
 	createRoom: (playerName: string) => void
@@ -50,6 +66,7 @@ export interface GameState {
 	stopGame: (roomId: string | null) => void
 	setIsGameStarted: (isGameStarted: boolean) => void
 	setRenderStartModal: (renderStartModal: boolean) => void
+	handleFinish: (roomId: string | null, stats: PlayerStats) => void
 }
 
 export interface MainGameContainerProps {
