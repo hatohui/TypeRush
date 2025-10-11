@@ -58,12 +58,13 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 
 		const totalTyped = correct + incorrect
 		const accuracy = totalTyped > 0 ? (correct / totalTyped) * 100 : 0
-		const timeInMinutes = selectedDuration !== 0 ? selectedDuration / 60 : timeElapsed / 60
+		const timeInMinutes =
+			selectedDuration !== 0 ? selectedDuration / 60 : timeElapsed / 60
 		const wpm = correct / 5 / timeInMinutes
 		const rawWpm = totalTyped / 5 / timeInMinutes
 
 		return { accuracy, wpm, rawWpm, correct, incorrect }
-	}, [wordResults, selectedDuration])
+	}, [wordResults, selectedDuration, timeElapsed])
 
 	const handleSpacePress = () => {
 		if (typed.trim() === '') return
@@ -134,7 +135,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 				timerRef.current = null
 			}
 		}
-	}, [startTime])
+	}, [selectedDuration, startTime])
 
 	useEffect(() => {
 		if (remainingTime === 0 && selectedDuration !== 0 && timerRef.current) {
@@ -142,15 +143,18 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			setResults(stats)
 			if (timerRef.current) clearInterval(timerRef.current)
 		}
-	}, [calculateStats, handleReset, remainingTime])
+	}, [calculateStats, handleReset, remainingTime, selectedDuration])
 
 	useEffect(() => {
-		if (currentWordIdx === words.length - 1 && caretIdx === words[currentWordIdx].length - 1) {
+		if (
+			currentWordIdx === words.length - 1 &&
+			caretIdx === words[currentWordIdx].length - 1
+		) {
 			const stats = calculateStats()
 			setResults(stats)
 			if (timerRef.current) clearInterval(timerRef.current)
 		}
-	}, [currentWordIdx, caretIdx, selectedDuration])
+	}, [currentWordIdx, caretIdx, selectedDuration, words, calculateStats])
 
 	useEffect(() => {
 		if (!roomId) return
@@ -240,7 +244,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			duration: 0.15,
 			ease: 'power1.inOut',
 		})
-	}, [currentWordIdx, caretIdx, localWords, caretRefs.current])
+	}, [currentWordIdx, caretIdx, localWords])
 
 	const otherPlayers = socket ? players.filter(p => p.id !== socket.id) : []
 
@@ -294,7 +298,11 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 						)
 					})}
 			</div>
-			{selectedDuration !== 0 ? <div>Remaining time: {remainingTime}</div> : <div>Elapsed time: {timeElapsed}</div>}
+			{selectedDuration !== 0 ? (
+				<div>Remaining time: {remainingTime}</div>
+			) : (
+				<div>Elapsed time: {timeElapsed}</div>
+			)}
 			<div
 				ref={containerRef}
 				tabIndex={0}
@@ -341,7 +349,10 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 									if (!startTime) {
 										setStartTime(Date.now())
 									}
-									if (typed.length >= words[currentWordIdx].length) {
+									if (
+										typed.length >= words[currentWordIdx].length &&
+										mode === 'practice'
+									) {
 										const newWord = localWords[currentWordIdx] + e.key
 										setLocalWords(prev => {
 											const newLocalWords = [...prev]
@@ -352,7 +363,8 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 									}
 									if (mode === 'multiplayer') {
 										const nextChar = localWords[currentWordIdx]?.[caretIdx + 1]
-										if (nextChar && nextChar === e.key) { //allow to next char only on typed correctly
+										if (nextChar && nextChar === e.key) {
+											//allow to next char only on typed correctly
 											setCaretIdx(prev => prev + 1)
 										} else {
 											e.preventDefault()
