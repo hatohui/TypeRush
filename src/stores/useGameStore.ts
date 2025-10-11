@@ -16,6 +16,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 	connected: false,
 	playerName: null,
 	error: { type: '', message: '' },
+	isGameStarted: false,
+	renderStartModal: false,
+	isHost: false,
 
 	connect: () => {
 		if (get().socket) return
@@ -29,7 +32,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 		})
 
 		socket.on('roomCreated', (room: Room) => {
-			set({ roomId: room.roomId, players: room.players, config: room.config })
+			set({
+				roomId: room.roomId,
+				players: room.players,
+				config: room.config,
+				isHost: true,
+			})
 		})
 
 		socket.on('roomJoined', (room: Room) => {
@@ -45,28 +53,25 @@ export const useGameStore = create<GameState>((set, get) => ({
 			set({ error: err })
 		})
 
-		socket.on('playerUpdate', (players: Player[]) => {
+		socket.on('playerUpdated', (players: Player[]) => {
 			set({ players })
 		})
 
-		socket.on(
-			'updateCaretFromServer',
-			(payload: { playerId: string; caret: Caret }) => {
-				set(state => ({
-					players: state.players.map(p =>
-						p.id === payload.playerId
-							? {
-									...p,
-									progress: {
-										...p.progress,
-										caret: payload.caret,
-									},
-								}
-							: p
-					),
-				}))
-			}
-		)
+		socket.on('caretUpdated', (payload: { playerId: string; caret: Caret }) => {
+			set(state => ({
+				players: state.players.map(p =>
+					p.id === payload.playerId
+						? {
+								...p,
+								progress: {
+									...p.progress,
+									caret: payload.caret,
+								},
+							}
+						: p
+				),
+			}))
+		})
 
 		socket.on('disconnect', () => {
 			set({
@@ -78,6 +83,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 				socket: null,
 			})
 		})
+
+		socket.on('gameStarted', () => {
+			set({ renderStartModal: true })
+		})
 	},
 
 	createRoom: (playerName: string) => {
@@ -86,6 +95,19 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 	joinRoom: (roomId: string, playerName: string) => {
 		get().socket?.emit('joinRoom', { roomId, playerName })
+	},
+
+	startGame: (roomId: string | null) => {
+		if (!roomId) return
+		get().socket?.emit('startGame', { roomId })
+	},
+
+	setIsGameStarted: (isGameStarted: boolean) => {
+		set({ isGameStarted: isGameStarted })
+	},
+
+	setRenderStartModal: (renderStartModal: boolean) => {
+		set({ renderStartModal: renderStartModal })
 	},
 
 	updateCaret: (caret: Caret, roomId: string) => {
@@ -98,7 +120,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 			),
 		}))
 
-		socket.emit('caretUpdate', {
+		socket.emit('updateCaret', {
 			caretIdx: caret.caretIdx,
 			wordIdx: caret.wordIdx,
 			roomId,

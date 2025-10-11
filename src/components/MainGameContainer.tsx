@@ -5,16 +5,16 @@ import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
 import { Flip } from 'gsap/Flip'
 import type { MainGameContainerProps } from '../common/types.ts'
+import { GAME_DURATION } from '../common/constant.ts'
 gsap.registerPlugin(Flip)
-
-const GAME_DURATION = [15, 30, 60, 0]
 
 const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
 	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-	const { updateCaret, roomId, players, socket } = useGameStore()
+	const { updateCaret, roomId, players, socket, setIsGameStarted } =
+		useGameStore()
 
 	const [localWords, setLocalWords] = useState<string[]>(words)
 	const [currentWordIdx, setCurrentWordIdx] = useState(0)

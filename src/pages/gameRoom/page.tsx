@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { useGameStore } from '../../stores/useGameStore.ts'
 import JoinRoomModal from '../../components/JoinRoomModal.tsx'
 import MainGameContainer from '../../components/MainGameContainer.tsx'
+import GameStartModal from '../../components/gameStartModal.tsx'
+import { Button } from 'antd'
+import { PiCrownFill } from 'react-icons/pi'
 
 const words: string[] = [
 	'umbrella',
@@ -57,11 +60,20 @@ const words: string[] = [
 ]
 
 const Page = () => {
-	const { connect, createRoom, joinRoom, connected, roomId, players, error } =
-		useGameStore()
+	const {
+		connect,
+		createRoom,
+		joinRoom,
+		connected,
+		roomId,
+		players,
+		error,
+		isGameStarted,
+		startGame,
+	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
-	const [render, setRender] = useState(true)
+	const { renderStartModal, isHost, setIsGameStarted } = useGameStore()
 
 	const handleOk = (values: { playerName: string; roomId?: string }) => {
 		setConfirmLoading(true)
@@ -121,20 +133,28 @@ const Page = () => {
 										key={player.id}
 										className='h-28 bg-gray-200 rounded-xl p-5 text-black'
 									>
-										Player: {player.playerName}
+										Player: {player.playerName}{player.isHost && <PiCrownFill />}
 									</div>
 								))}
 						</div>
 					</div>
 
-					<div className='flex justify-center mt-8'>
-						<button
-							onClick={() => setRender(!render)}
-							className='bg-gray-200 text-black px-8 py-2 rounded'
-						>
-							START
-						</button>
-					</div>
+					{isHost && (
+						<div className='flex justify-center mt-8'>
+							<Button
+								onClick={() => {
+									startGame(roomId)
+								}}
+								type='primary'
+								disabled={isGameStarted}
+							>
+								START
+							</Button>
+							<Button color='danger' onClick={() => setIsGameStarted(false)}>
+								Stop game
+							</Button>
+						</div>
+					)}
 				</div>
 
 				<aside className='w-80 p-6 bg-[#414246]'>
@@ -142,7 +162,9 @@ const Page = () => {
 				</aside>
 			</main>
 
-			{roomId && words && render && (
+			{renderStartModal && <GameStartModal duration={3} />}
+
+			{roomId && words && isGameStarted && (
 				<MainGameContainer words={words} mode={'multiplayer'} />
 			)}
 		</div>

@@ -11,6 +11,7 @@ export interface Player {
 	progress: {
 		caret: Caret
 	}
+	isHost: boolean
 }
 
 export interface GameConfig {
@@ -37,11 +38,17 @@ export interface GameState {
 	connected: boolean
 	playerName: string | null
 	error: GameError
+	isGameStarted: boolean
+	renderStartModal: boolean
+	isHost: boolean
 
 	connect: () => void
 	createRoom: (playerName: string) => void
 	joinRoom: (roomId: string, name: string) => void
 	updateCaret: (caret: Caret, roomId: string) => void
+	startGame: (roomId: string | null) => void
+	setIsGameStarted: (isGameStarted: boolean) => void
+	setRenderStartModal: (renderStartModal: boolean) => void
 }
 
 export interface MainGameContainerProps {
