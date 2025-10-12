@@ -255,58 +255,106 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		})
 	}, [currentWordIdx, caretIdx, localWords])
 
+	// Initial caret positioning for all players
+	useEffect(() => {
+		if (!containerRef.current) return
+
+		requestAnimationFrame(() => {
+			// Position own caret
+			const ownCaretElement = caretRefs.current[3]
+			if (ownCaretElement) {
+				const target = containerRef.current?.querySelector(
+					`[data-word="0"][data-char="0"]`
+				) as HTMLElement | null
+
+				if (target) {
+					target.parentNode?.insertBefore(ownCaretElement, target)
+				}
+			}
+
+			// Position other players' carets
+			if (!socket) return
+			const otherPlayers = players.filter(p => p.id !== socket.id)
+
+			otherPlayers.forEach((player, playerIndex) => {
+				const caretElement = caretRefs.current[playerIndex]
+				if (!caretElement) return
+
+				const caret = player.progress?.caret
+				const wordIdx = caret?.wordIdx ?? 0
+				const caretIdx = caret?.caretIdx ?? -1
+
+				let target: HTMLElement | null = null
+
+				if (caretIdx === -1) {
+					target = containerRef.current?.querySelector(
+						`[data-word="${wordIdx}"][data-char="0"]`
+					) as HTMLElement | null
+
+					if (target) {
+						target.parentNode?.insertBefore(caretElement, target)
+					}
+				} else {
+					target = containerRef.current?.querySelector(
+						`[data-word="${wordIdx}"][data-char="${caretIdx}"]`
+					) as HTMLElement | null
+
+					if (target) {
+						target.appendChild(caretElement)
+					}
+				}
+			})
+		})
+	}, []) // Consider adding [players, socket] if players can change on mount
+
 	const otherPlayers = socket ? players.filter(p => p.id !== socket.id) : []
 
 	return (
 		<div>
-			<Caret
-				ref={el => {
-					caretRefs.current[3] = el
-				}}
-				color={getPlayerColor(3)}
-			/>
-			<p>Current id: {currentWordIdx}</p>
-			<p>Current word: {currentWord}</p>
-			<p>Typed: {typed}</p>
-			<p>Typed length: {typed?.length}</p>
-			<p>
-				Caret index: {caretIdx} Word index: {currentWordIdx}
-			</p>
-			<p>Players: {players.length}/4</p>
+			{/*<p>Current id: {currentWordIdx}</p>*/}
+			{/*<p>Current word: {currentWord}</p>*/}
+			{/*<p>Typed: {typed}</p>*/}
+			{/*<p>Typed length: {typed?.length}</p>*/}
+			{/*<p>*/}
+			{/*	Caret index: {caretIdx} Word index: {currentWordIdx}*/}
+			{/*</p>*/}
+			{/*<p>Players: {players.length}/4</p>*/}
 
-			<div className='mb-4'>
-				{otherPlayers.map((player, index) => {
-					const caret = player.progress?.caret
-					return (
-						<div key={player.id} className='text-sm'>
-							<span style={{ color: getPlayerColor(index) }}>
-								{player.playerName}
-							</span>
-							: Word {caret?.wordIdx ?? 0}, Position {caret?.caretIdx ?? -1}
-						</div>
-					)
-				})}
-			</div>
+			{/*<div className='mb-4'>*/}
+			{/*	{otherPlayers.map((player, index) => {*/}
+			{/*		const caret = player.progress?.caret*/}
+			{/*		return (*/}
+			{/*			<div key={player.id} className='text-sm'>*/}
+			{/*				<span style={{ color: getPlayerColor(index) }}>*/}
+			{/*					{player.playerName}*/}
+			{/*				</span>*/}
+			{/*				: Word {caret?.wordIdx ?? 0}, Position {caret?.caretIdx ?? -1}*/}
+			{/*			</div>*/}
+			{/*		)*/}
+			{/*	})}*/}
+			{/*</div>*/}
 
-			<Button onClick={handleReset}>Reset</Button>
-			<div>
-				Duration:{' '}
-				{GAME_DURATION &&
-					GAME_DURATION.map((duration, idx) => {
-						return (
-							<span
-								onClick={() => {
-									setSelectedDuration(duration)
-									setRemainingTime(duration)
-								}}
-								key={idx}
-								className={`${duration === selectedDuration ? 'font-bold text-yellow-400' : ''} mr-2 cursor-pointer`}
-							>
-								{duration === 0 ? 'No time' : duration}
-							</span>
-						)
-					})}
-			</div>
+			{mode === 'practice' && <Button onClick={handleReset}>Reset</Button>}
+			{mode === 'practice' && (
+				<div>
+					Duration:{' '}
+					{GAME_DURATION &&
+						GAME_DURATION.map((duration, idx) => {
+							return (
+								<span
+									onClick={() => {
+										setSelectedDuration(duration)
+										setRemainingTime(duration)
+									}}
+									key={idx}
+									className={`${duration === selectedDuration ? 'font-bold text-yellow-400' : ''} mr-2 cursor-pointer`}
+								>
+									{duration === 0 ? 'No time' : duration}
+								</span>
+							)
+						})}
+				</div>
+			)}
 			{selectedDuration !== 0 ? (
 				<div>Remaining time: {remainingTime}</div>
 			) : (
@@ -317,6 +365,23 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 				tabIndex={0}
 				className='h-[400px] text-gray-500 w-[900px] border border-black p-10 flex flex-wrap relative'
 			>
+				<Caret
+					ref={el => {
+						caretRefs.current[3] = el
+					}}
+					color={getPlayerColor(3)}
+				/>
+				{otherPlayers.map((player, playerIndex) => (
+					<Caret
+						key={player.id}
+						ref={el => {
+							caretRefs.current[playerIndex] = el
+						}}
+						isOpponent
+						playerName={player.playerName}
+						color={getPlayerColor(playerIndex)}
+					/>
+				))}
 				{localWords?.map((word, wordIdx) => (
 					<span
 						className={`mr-2 text-3xl ${currentWord === word ? 'text-black' : ''}`}
@@ -417,18 +482,6 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 							)
 						})}
 					</span>
-				))}
-
-				{otherPlayers.map((player, playerIndex) => (
-					<Caret
-						key={player.id}
-						ref={el => {
-							caretRefs.current[playerIndex] = el
-						}}
-						isOpponent
-						playerName={player.playerName}
-						color={getPlayerColor(playerIndex)}
-					/>
 				))}
 			</div>
 			{mode === 'practice' && (

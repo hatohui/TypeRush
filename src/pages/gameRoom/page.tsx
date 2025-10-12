@@ -139,7 +139,9 @@ const Page = () => {
 			)}
 
 			{roomId && words && isGameStarted && (
-				<MainGameContainer words={words} mode={'multiplayer'} />
+				<div className='flex justify-center items-center'>
+					<MainGameContainer words={words} mode={'multiplayer'} />
+				</div>
 			)}
 		</div>
 	)
