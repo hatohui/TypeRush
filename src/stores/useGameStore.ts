@@ -22,6 +22,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 	isHost: false,
 	leaderboard: [],
 	position: null,
+	displayFinishModal: false,
 
 	connect: () => {
 		if (get().socket) return
@@ -72,6 +73,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 			}
 		})
 
+		socket.on('gameFinished', () => {
+			set({ displayFinishModal: true, isGameStarted: false })
+		})
+
 		socket.on('caretUpdated', (payload: { playerId: string; caret: Caret }) => {
 			set(state => ({
 				players: state.players.map(p =>
@@ -100,7 +105,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 		})
 
 		socket.on('gameStarted', () => {
-			set({ renderStartModal: true })
+			set({ renderStartModal: true, leaderboard: [] })
 		})
 
 		socket.on('gameStopped', () => {
@@ -151,7 +156,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 		})
 	},
 
-	handleFinish: (roomId: string | null, stats: PlayerStats) => {
+	handlePlayerFinish: (roomId: string | null, stats: PlayerStats) => {
 		const socket = get().socket
 		if (!socket || !roomId) return
 
@@ -159,5 +164,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 			roomId,
 			stats,
 		})
+	},
+
+	setDisplayFinishModal: (displayFinishModal: boolean) => {
+		set({ displayFinishModal: displayFinishModal })
 	},
 }))

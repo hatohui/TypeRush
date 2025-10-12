@@ -57,6 +57,7 @@ export interface GameState {
 	isHost: boolean
 	leaderboard: RoomLeaderboardEntry[]
 	position: number | null
+	displayFinishModal: boolean
 
 	connect: () => void
 	createRoom: (playerName: string) => void
@@ -66,7 +67,8 @@ export interface GameState {
 	stopGame: (roomId: string | null) => void
 	setIsGameStarted: (isGameStarted: boolean) => void
 	setRenderStartModal: (renderStartModal: boolean) => void
-	handleFinish: (roomId: string | null, stats: PlayerStats) => void
+	handlePlayerFinish: (roomId: string | null, stats: PlayerStats) => void
+	setDisplayFinishModal: (displayFinishModal: boolean) => void
 }
 
 export interface MainGameContainerProps {

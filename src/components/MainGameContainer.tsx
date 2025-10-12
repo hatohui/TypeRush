@@ -13,7 +13,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
 	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-	const { updateCaret, roomId, players, socket, handleFinish, position } =
+	const { updateCaret, roomId, players, socket, handlePlayerFinish, position } =
 		useGameStore()
 
 	const [localWords, setLocalWords] = useState<string[]>(words)
@@ -153,7 +153,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 			const stats = calculateStats()
 			setResults(stats)
 			if (timerRef.current) clearInterval(timerRef.current)
-			handleFinish(roomId, stats)
+			handlePlayerFinish(roomId, stats)
 		}
 	}, [
 		currentWordIdx,
@@ -161,7 +161,7 @@ const MainGameContainer = ({ words, mode }: MainGameContainerProps) => {
 		selectedDuration,
 		words,
 		calculateStats,
-		handleFinish,
+		handlePlayerFinish,
 		roomId,
 	])
 

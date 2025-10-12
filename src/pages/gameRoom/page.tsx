@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { useGameStore } from '../../stores/useGameStore.ts'
 import JoinRoomModal from '../../components/JoinRoomModal.tsx'
 import MainGameContainer from '../../components/MainGameContainer.tsx'
-import GameStartModal from '../../components/gameStartModal.tsx'
+import GameStartModal from '../../components/GameStartModal.tsx'
 import { Button } from 'antd'
 import { PiCrownFill } from 'react-icons/pi'
+import GameFinishModal from '../../components/GameFinishModal.tsx'
 
 const words: string[] = [
 	'umbrella',
@@ -33,6 +34,8 @@ const Page = () => {
 		error,
 		isGameStarted,
 		startGame,
+		displayFinishModal,
+		setDisplayFinishModal,
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
@@ -127,6 +130,13 @@ const Page = () => {
 			</main>
 
 			{renderStartModal && <GameStartModal duration={3} />}
+
+			{displayFinishModal && (
+				<GameFinishModal
+					setDisplayFinishModal={setDisplayFinishModal}
+					displayFinishModal={displayFinishModal}
+				/>
+			)}
 
 			{roomId && words && isGameStarted && (
 				<MainGameContainer words={words} mode={'multiplayer'} />
