@@ -72,6 +72,7 @@ export interface GameState {
 	setRenderStartModal: (renderStartModal: boolean) => void
 	handlePlayerFinish: (roomId: string | null, stats: PlayerStats) => void
 	setDisplayFinishModal: (displayFinishModal: boolean) => void
+	gameReset: () => void
 }
 
 export type GameDuration = (typeof GAME_DURATION)[number]

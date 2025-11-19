@@ -111,6 +111,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 		socket.on('gameStopped', () => {
 			set({ isGameStarted: false })
+			get().gameReset()
 		})
 	},
 
@@ -173,5 +174,20 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 	setDisplayFinishModal: (displayFinishModal: boolean) => {
 		set({ displayFinishModal: displayFinishModal })
+	},
+
+	gameReset: () => {
+		set(state => ({
+			players: state.players.map(player => ({
+				...player,
+				progress: {
+					...player.progress,
+					caret: {
+						caretIdx: -1,
+						wordIdx: 0,
+					},
+				},
+			})),
+		}))
 	},
 }))

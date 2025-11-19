@@ -26,8 +26,15 @@ const MainGameContainer = ({
 	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
 	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-	const { updateCaret, roomId, players, socket, handlePlayerFinish, position } =
-		useGameStore()
+	const {
+		updateCaret,
+		roomId,
+		players,
+		socket,
+		handlePlayerFinish,
+		position,
+		gameReset,
+	} = useGameStore()
 
 	const [localWords, setLocalWords] = useState<string[]>(words)
 	const [currentWordIdx, setCurrentWordIdx] = useState(0)
@@ -125,6 +132,7 @@ const MainGameContainer = ({
 		setStartTime(null)
 		setTimeElapsed(0)
 		setResults(null)
+		gameReset()
 	}, [words, roomId, updateCaret, duration])
 
 	useEffect(() => {
@@ -417,10 +425,21 @@ const MainGameContainer = ({
 										e.key !== InputKey.BACKSPACE
 									)
 										return
-									if (e.key === InputKey.SPACE) {
-										console.log('space')
+									if (
+										e.key === InputKey.SPACE &&
+										mode === TypingMode.PRACTICE
+									) {
 										e.preventDefault()
 										handleSpacePress()
+										return
+									} else if (
+										e.key === InputKey.SPACE &&
+										mode === TypingMode.MULTIPLAYER
+									) {
+										if (typed.length === words[currentWordIdx].length) {
+											handleSpacePress()
+										}
+										e.preventDefault()
 										return
 									}
 									if (
