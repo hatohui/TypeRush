@@ -329,17 +329,17 @@ const MainGameContainer = ({
 
 	return (
 		<div>
-			{/*<p>Current id: {currentWordIdx}</p>*/}
-			{/*<p>Current word: {currentWord}</p>*/}
-			{/*<p>Current word length: {currentWord?.length}</p>*/}
-			{/*<p>Original word: {words[currentWordIdx]}</p>*/}
-			{/*<p>Original word length: {words[currentWordIdx].length}</p>*/}
-			{/*<p>Typed: {typed}</p>*/}
-			{/*<p>Typed length: {typed?.length}</p>*/}
-			{/*<p>*/}
-			{/*	Caret index: {caretIdx} Word index: {currentWordIdx}*/}
-			{/*</p>*/}
-			{/*<p>Players: {players.length}/4</p>*/}
+			<p>Current id: {currentWordIdx}</p>
+			<p>Current word: {currentWord}</p>
+			<p>Current word length: {currentWord?.length}</p>
+			<p>Original word: {words[currentWordIdx]}</p>
+			<p>Original word length: {words[currentWordIdx].length}</p>
+			<p>Typed: {typed}</p>
+			<p>Typed length: {typed?.length}</p>
+			<p>
+				Caret index: {caretIdx} Word index: {currentWordIdx}
+			</p>
+			<p>Players: {players.length}/4</p>
 
 			{/*<div className='mb-4'>*/}
 			{/*	{otherPlayers.map((player, index) => {*/}
@@ -422,6 +422,7 @@ const MainGameContainer = ({
 									)
 										return
 									if (e.key === InputKey.SPACE) {
+										console.log('space')
 										e.preventDefault()
 										handleSpacePress()
 										return
@@ -487,8 +488,9 @@ const MainGameContainer = ({
 									if (mode === TypingMode.MULTIPLAYER) {
 										const nextChar = localWords[currentWordIdx]?.[caretIdx + 1]
 										if (nextChar && nextChar === e.key) {
-											//allow to next char only on typed correctly
+											//allow to next char only on correctly typed characters
 											setCaretIdx(prev => prev + 1)
+											setTyped(prev => prev + e.key)
 										} else {
 											e.preventDefault()
 										}
