@@ -1,5 +1,7 @@
 export const GAME_DURATION = [15, 30, 60, 0] as const
 
+export const MAX_OVERFLOW = 10
+
 export const SAMPLE_WORDS = [
 	'about',
 	'after',

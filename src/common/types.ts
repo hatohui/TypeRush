@@ -91,6 +91,7 @@ export const InputKey = {
 	ARROW_DOWN: 'ArrowDown',
 	TAB: 'Tab',
 	ENTER: 'Enter',
+	ALT: 'Alt',
 }
 
 export const TypingMode = {

@@ -12,6 +12,7 @@ import {
 	type MainGameContainerProps,
 } from '../common/types.ts'
 import { TbReload } from 'react-icons/tb'
+import { MAX_OVERFLOW } from '../common/constant.ts'
 gsap.registerPlugin(Flip)
 
 const MainGameContainer = ({
@@ -328,14 +329,17 @@ const MainGameContainer = ({
 
 	return (
 		<div>
-			{/*<p>Current id: {currentWordIdx}</p>*/}
-			{/*<p>Current word: {currentWord}</p>*/}
-			{/*<p>Typed: {typed}</p>*/}
-			{/*<p>Typed length: {typed?.length}</p>*/}
-			{/*<p>*/}
-			{/*	Caret index: {caretIdx} Word index: {currentWordIdx}*/}
-			{/*</p>*/}
-			{/*<p>Players: {players.length}/4</p>*/}
+			<p>Current id: {currentWordIdx}</p>
+			<p>Current word: {currentWord}</p>
+			<p>Current word length: {currentWord?.length}</p>
+			<p>Original word: {words[currentWordIdx]}</p>
+			<p>Original word length: {words[currentWordIdx].length}</p>
+			<p>Typed: {typed}</p>
+			<p>Typed length: {typed?.length}</p>
+			<p>
+				Caret index: {caretIdx} Word index: {currentWordIdx}
+			</p>
+			<p>Players: {players.length}/4</p>
 
 			{/*<div className='mb-4'>*/}
 			{/*	{otherPlayers.map((player, index) => {*/}
@@ -411,15 +415,22 @@ const MainGameContainer = ({
 								type='text'
 								value={typed}
 								onKeyDown={e => {
+									if (
+										typed.length >
+											words[currentWordIdx].length + MAX_OVERFLOW &&
+										e.key !== InputKey.BACKSPACE
+									)
+										return
 									if (e.key === InputKey.SPACE) {
 										e.preventDefault()
 										handleSpacePress()
 										return
 									}
 									if (
-										e.key === InputKey.TAB ||
-										e.key === InputKey.ENTER ||
 										[
+											InputKey.ENTER,
+											InputKey.TAB,
+											InputKey.ALT,
 											InputKey.ARROW_UP,
 											InputKey.ARROW_DOWN,
 											InputKey.ARROW_LEFT,
@@ -433,9 +444,9 @@ const MainGameContainer = ({
 										if (typed.length > 0) {
 											const newLength = typed.length - 1
 
-											if (caretIdx === newLength) {
-												setCaretIdx(prev => Math.max(-1, prev - 1))
-											}
+											//if (caretIdx === newLength) {
+											setCaretIdx(prev => Math.max(-1, prev - 1))
+											setTyped(prev => prev.slice(0, -1))
 
 											// delete extended characters if typed length is greater than the original word length
 
@@ -450,8 +461,11 @@ const MainGameContainer = ({
 													return newLocalWords
 												})
 												setCurrentWord(newWord)
+												setTyped(newWord)
 											}
 
+											return
+										} else {
 											return
 										}
 									}
@@ -480,11 +494,8 @@ const MainGameContainer = ({
 										}
 									} else {
 										setCaretIdx(prev => prev + 1)
+										setTyped(prev => prev + e.key)
 									}
-								}}
-								onChange={e => {
-									const value = e.target.value.replace(/ /g, '')
-									setTyped(value)
 								}}
 							/>
 						)}
@@ -497,11 +508,13 @@ const MainGameContainer = ({
 										storedResults[idx] === CharacterState.CORRECT
 											? 'text-white'
 											: storedResults[idx] === CharacterState.INCORRECT
-												? 'text-red-500'
+												? 'text-red-500 underline'
 												: ''
 								}
 							} else if (wordIdx === currentWordIdx) {
-								if (idx < typed.length) {
+								if (idx >= words[currentWordIdx].length) {
+									state = 'text-red-500'
+								} else if (idx < typed.length) {
 									state = typed[idx] === char ? 'text-white' : 'text-red-500'
 								}
 							}
