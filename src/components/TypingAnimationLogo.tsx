@@ -44,7 +44,7 @@ const TypingAnimation = ({
 	const secondPart = displayedText.slice(colorSplit)
 
 	return (
-		<span className={className}>
+		<span className={`${className}`}>
 			<span className={primaryColor}>{firstPart}</span>
 			<span className={accentColor}>{secondPart}</span>
 			<span className={`animate-blink ${accentColor}`}>|</span>

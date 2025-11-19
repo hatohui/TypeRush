@@ -329,17 +329,17 @@ const MainGameContainer = ({
 
 	return (
 		<div>
-			<p>Current id: {currentWordIdx}</p>
-			<p>Current word: {currentWord}</p>
-			<p>Current word length: {currentWord?.length}</p>
-			<p>Original word: {words[currentWordIdx]}</p>
-			<p>Original word length: {words[currentWordIdx].length}</p>
-			<p>Typed: {typed}</p>
-			<p>Typed length: {typed?.length}</p>
-			<p>
-				Caret index: {caretIdx} Word index: {currentWordIdx}
-			</p>
-			<p>Players: {players.length}/4</p>
+			{/*<p>Current id: {currentWordIdx}</p>*/}
+			{/*<p>Current word: {currentWord}</p>*/}
+			{/*<p>Current word length: {currentWord?.length}</p>*/}
+			{/*<p>Original word: {words[currentWordIdx]}</p>*/}
+			{/*<p>Original word length: {words[currentWordIdx].length}</p>*/}
+			{/*<p>Typed: {typed}</p>*/}
+			{/*<p>Typed length: {typed?.length}</p>*/}
+			{/*<p>*/}
+			{/*	Caret index: {caretIdx} Word index: {currentWordIdx}*/}
+			{/*</p>*/}
+			{/*<p>Players: {players.length}/4</p>*/}
 
 			{/*<div className='mb-4'>*/}
 			{/*	{otherPlayers.map((player, index) => {*/}
@@ -387,7 +387,7 @@ const MainGameContainer = ({
 			<div
 				ref={containerRef}
 				tabIndex={0}
-				className='max-h-[400px] text-gray-500 w-[1200px] flex flex-wrap gap-4 relative'
+				className=' text-gray-500 max-w-[1200px] min-w-[400px] flex flex-wrap gap-2 text-2xl sm:text-3xl sm:gap-4 relative overscroll-none'
 			>
 				<Caret
 					ref={el => {
@@ -407,7 +407,7 @@ const MainGameContainer = ({
 					/>
 				))}
 				{localWords?.map((word, wordIdx) => (
-					<span className='text-3xl' key={wordIdx}>
+					<span key={wordIdx}>
 						{word === currentWord && (
 							<input
 								className='text-3xl opacity-0 absolute flex focus:outline-none focus:ring-0 focus:border-transparent'

@@ -6,7 +6,7 @@ const NavBar = (): React.ReactElement => {
 	const navigate = useNavigate()
 
 	return (
-		<header className='bg-background-secondary px-6 py-4 flex justify-between items-center'>
+		<header className='bg-background-secondary px-6 py-4 flex justify-between items-center w-full'>
 			<h1
 				className='text-2xl font-bold text-white cursor-pointer'
 				onClick={() => navigate('/')}

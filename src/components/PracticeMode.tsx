@@ -7,13 +7,11 @@ import { SAMPLE_WORDS } from '../common/constant.ts'
 const PracticeMode = () => {
 	const [selectedDuration, setSelectedDuration] = useState<GameDuration>(0)
 	return (
-		<div>
-			<div className='flex justify-center'>
-				<ModeBar
-					selectedDuration={selectedDuration}
-					setSelectedDuration={setSelectedDuration}
-				/>
-			</div>
+		<div className='w-full h-full flex flex-col justify-center items-center'>
+			<ModeBar
+				selectedDuration={selectedDuration}
+				setSelectedDuration={setSelectedDuration}
+			/>
 			<MainGameContainer
 				words={SAMPLE_WORDS}
 				mode={'practice'}
