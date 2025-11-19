@@ -112,3 +112,11 @@ export const CharacterState = {
 	INCORRECT: 'incorrect',
 	UNTYPED: 'untyped',
 }
+
+export type SingleplayerResultType = {
+	accuracy: number
+	wpm: number
+	rawWpm: number
+	correct: number
+	incorrect: number
+}

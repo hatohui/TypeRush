@@ -1,4 +1,4 @@
-import { Button, Modal } from 'antd'
+import { Button } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../stores/useGameStore.ts'
 import Caret from './Caret.tsx'
@@ -10,9 +10,11 @@ import {
 	PlayerColor,
 	TypingMode,
 	type MainGameContainerProps,
+	type SingleplayerResultType,
 } from '../common/types.ts'
 import { TbReload } from 'react-icons/tb'
 import { MAX_OVERFLOW } from '../common/constant.ts'
+import GameFinishModalSingle from './GameFinishModalSingle.tsx'
 gsap.registerPlugin(Flip)
 
 const MainGameContainer = ({
@@ -36,13 +38,7 @@ const MainGameContainer = ({
 	const [caretIdx, setCaretIdx] = useState(-1)
 	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
 
-	const [results, setResults] = useState<null | {
-		accuracy: number
-		wpm: number
-		rawWpm: number
-		correct: number
-		incorrect: number
-	}>(null)
+	const [results, setResults] = useState<null | SingleplayerResultType>(null)
 
 	const [startTime, setStartTime] = useState<number | null>(null)
 	const [remainingTime, setRemainingTime] = useState<number>(duration)
@@ -341,19 +337,19 @@ const MainGameContainer = ({
 			</p>
 			<p>Players: {players.length}/4</p>
 
-			{/*<div className='mb-4'>*/}
-			{/*	{otherPlayers.map((player, index) => {*/}
-			{/*		const caret = player.progress?.caret*/}
-			{/*		return (*/}
-			{/*			<div key={player.id} className='text-sm'>*/}
-			{/*				<span style={{ color: getPlayerColor(index) }}>*/}
-			{/*					{player.playerName}*/}
-			{/*				</span>*/}
-			{/*				: Word {caret?.wordIdx ?? 0}, Position {caret?.caretIdx ?? -1}*/}
-			{/*			</div>*/}
-			{/*		)*/}
-			{/*	})}*/}
-			{/*</div>*/}
+			<div className='mb-4'>
+				{otherPlayers.map((player, index) => {
+					const caret = player.progress?.caret
+					return (
+						<div key={player.id} className='text-sm'>
+							<span style={{ color: getPlayerColor(index) }}>
+								{player.playerName}
+							</span>
+							: Word {caret?.wordIdx ?? 0}, Position {caret?.caretIdx ?? -1}
+						</div>
+					)
+				})}
+			</div>
 
 			{/*{mode === 'practice' && (*/}
 			{/*	<div>*/}
@@ -534,8 +530,8 @@ const MainGameContainer = ({
 					</span>
 				))}
 			</div>
-			{mode === TypingMode.PRACTICE && (
-				<Modal
+			{mode === TypingMode.PRACTICE && results && (
+				<GameFinishModalSingle
 					open={!!results}
 					onCancel={handleReset}
 					footer={[
@@ -544,21 +540,13 @@ const MainGameContainer = ({
 						</Button>,
 					]}
 					title='Your Results'
-				>
-					{results && (
-						<div>
-							<p>Accuracy: {results.accuracy.toFixed(1)}%</p>
-							<p>WPM: {results.wpm.toFixed(1)}</p>
-							<p>Raw WPM: {results.rawWpm.toFixed(1)}</p>
-							<p>Correct chars: {results.correct}</p>
-							<p>Incorrect chars: {results.incorrect}</p>
-						</div>
-					)}
-				</Modal>
+					isMultiplayer={mode === TypingMode.MULTIPLAYER}
+					results={results}
+				/>
 			)}
-			{mode === TypingMode.MULTIPLAYER && (
-				<Modal
-					open={results != null && position != null}
+			{mode === TypingMode.MULTIPLAYER && results && (
+				<GameFinishModalSingle
+					open={position != null}
 					onCancel={handleReset}
 					footer={[
 						<Button key='close' onClick={handleReset}>
@@ -566,18 +554,10 @@ const MainGameContainer = ({
 						</Button>,
 					]}
 					title='Your Results'
-				>
-					{results && (
-						<div>
-							<p>Accuracy: {results.accuracy.toFixed(1)}%</p>
-							<p>WPM: {results.wpm.toFixed(1)}</p>
-							<p>Raw WPM: {results.rawWpm.toFixed(1)}</p>
-							<p>Correct chars: {results.correct}</p>
-							<p>Incorrect chars: {results.incorrect}</p>
-						</div>
-					)}
-					{position !== null && <p>Position: {position + 1}</p>}
-				</Modal>
+					isMultiplayer={mode === TypingMode.MULTIPLAYER}
+					results={results}
+					position={position}
+				/>
 			)}
 			{mode === TypingMode.PRACTICE && (
 				<TbReload
