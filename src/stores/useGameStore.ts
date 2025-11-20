@@ -7,6 +7,7 @@ import type {
 	Room,
 	GameError,
 	PlayerStats,
+	GameConfig,
 } from '../common/types.ts'
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -113,6 +114,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 			set({ isGameStarted: false })
 			get().gameReset()
 		})
+
+		socket.on('configChanged', config => {
+			console.log('new config', config)
+			set({ config: config })
+		})
 	},
 
 	createRoom: (playerName: string) => {
@@ -160,6 +166,14 @@ export const useGameStore = create<GameState>((set, get) => ({
 			wordIdx: caret.wordIdx,
 			roomId,
 		})
+	},
+
+	handleConfigChange: (config: GameConfig, roomId: string | null) => {
+		const socket = get().socket
+		if (!socket || !config || !config.mode || !roomId) {
+			return
+		}
+		socket.emit('configChange', { config, roomId })
 	},
 
 	handlePlayerFinish: (roomId: string | null, stats: PlayerStats) => {

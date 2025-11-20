@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io-client'
-import type { GAME_DURATION } from './constant.ts'
+import { type GAME_DURATION, MULTIPLAYER_MODES } from './constant.ts'
 
 export interface Caret {
 	caretIdx: number
@@ -15,10 +15,18 @@ export interface Player {
 	isHost: boolean
 }
 
-export interface GameConfig {
-	words: string[]
-	duration: number
-}
+export type MultiplayerMode = (typeof MULTIPLAYER_MODES)[number]['value']
+
+export type GameConfig =
+	| {
+			words: string[]
+			mode: 'type-race'
+	  }
+	| {
+			words: string[]
+			mode: 'wave-rush'
+			duration: number
+	  }
 
 export interface PlayerStats {
 	accuracy: number
@@ -73,6 +81,7 @@ export interface GameState {
 	handlePlayerFinish: (roomId: string | null, stats: PlayerStats) => void
 	setDisplayFinishModal: (displayFinishModal: boolean) => void
 	gameReset: () => void
+	handleConfigChange: (config: GameConfig, roomId: string | null) => void
 }
 
 export type GameDuration = (typeof GAME_DURATION)[number]
@@ -120,4 +129,17 @@ export type SingleplayerResultType = {
 	rawWpm: number
 	correct: number
 	incorrect: number
+}
+
+export type FieldType = {
+	mode: MultiplayerMode
+	roundDuration: number
+}
+
+export interface LobbySettingsFormProps {
+	config: GameConfig
+	isHost: boolean
+	multiplayerMode: MultiplayerMode
+	onModeChange: (mode: MultiplayerMode) => void
+	onSubmit: (values: FieldType) => void
 }

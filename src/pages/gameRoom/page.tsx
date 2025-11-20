@@ -3,10 +3,12 @@ import { useGameStore } from '../../stores/useGameStore.ts'
 import JoinRoomModal from '../../components/JoinRoomModal.tsx'
 import MainGameContainer from '../../components/MainGameContainer.tsx'
 import GameStartModal from '../../components/GameStartModal.tsx'
-import { Button } from 'antd'
+import { Button, type FormProps } from 'antd'
 import { PiCrownFill } from 'react-icons/pi'
 import GameFinishModal from '../../components/GameFinishModal.tsx'
 import { SAMPLE_WORDS } from '../../common/constant.ts'
+import type { MultiplayerMode, FieldType } from '../../common/types.ts'
+import LobbySettingsForm from '../../components/GameConfigForm.tsx'
 
 const Page = () => {
 	const {
@@ -24,7 +26,11 @@ const Page = () => {
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
-	const { renderStartModal, isHost, stopGame } = useGameStore()
+	const { renderStartModal, isHost, stopGame, config, handleConfigChange } =
+		useGameStore()
+	const [multiplayerMode, setMultiplayerMode] = useState<MultiplayerMode>(
+		config?.mode ? config.mode : 'type-race'
+	)
 
 	const handleOk = (values: { playerName: string; roomId?: string }) => {
 		setConfirmLoading(true)
@@ -47,6 +53,18 @@ const Page = () => {
 			setConfirmLoading(false)
 		}
 	}, [connected, error, roomId])
+
+	const handleSaveConfig: FormProps<FieldType>['onFinish'] = values => {
+		console.log('Success:', values)
+		handleConfigChange(
+			{
+				words: ['hello'],
+				mode: values.mode,
+				duration: values.roundDuration,
+			},
+			roomId
+		)
+	}
 
 	return (
 		<div className='min-h-screen bg-[#383A3E] text-white flex flex-col'>
@@ -96,6 +114,15 @@ const Page = () => {
 
 				<aside className='w-80 p-6 bg-[#414246]'>
 					<h2 className='text-sm font-semibold'>Lobby Settings</h2>
+					{config && (
+						<LobbySettingsForm
+							config={config}
+							isHost={isHost}
+							multiplayerMode={multiplayerMode}
+							onModeChange={setMultiplayerMode}
+							onSubmit={handleSaveConfig}
+						/>
+					)}
 				</aside>
 			</main>
 

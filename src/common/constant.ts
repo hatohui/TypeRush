@@ -34,3 +34,8 @@ export const SAMPLE_WORDS = [
 	// 'system',
 	// 'water',
 ]
+
+export const MULTIPLAYER_MODES = [
+	{ value: 'type-race', label: 'Type Race' },
+	{ value: 'wave-rush', label: 'Wave Rush' },
+] as const
