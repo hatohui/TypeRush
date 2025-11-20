@@ -10,6 +10,14 @@ import { SAMPLE_WORDS } from '../../common/constant.ts'
 import type { MultiplayerMode, FieldType } from '../../common/types.ts'
 import LobbySettingsForm from '../../components/GameConfigForm.tsx'
 
+export const WAVE_RUSH_WORDS = [
+	['apple', 'bread', 'chair', 'dance', 'earth'],
+	['flame', 'grace', 'heart', 'ivory', 'juice'],
+	['knife', 'lemon', 'music', 'night', 'ocean'],
+	['paint', 'queen', 'river', 'stone', 'train'],
+	['unity', 'voice', 'water', 'youth', 'zebra'],
+]
+
 const Page = () => {
 	const {
 		connect,
@@ -136,7 +144,7 @@ const Page = () => {
 			)}
 
 			{roomId && isGameStarted && (
-				<div className='flex justify-center items-center'>
+				<div className='flex flex-col max-w-[1200px] min-w-[400px] justify-center items-center'>
 					<MainGameContainer
 						words={SAMPLE_WORDS}
 						mode={'multiplayer'}
