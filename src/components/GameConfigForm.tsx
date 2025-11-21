@@ -23,6 +23,7 @@ const LobbySettingsForm: React.FC<LobbySettingsFormProps> = ({
 			form.setFieldsValue({
 				mode: config.mode,
 				roundDuration: config.mode === 'wave-rush' ? config.duration : 0,
+				waves: config.mode === 'wave-rush' ? config.waves : 0,
 			})
 			onModeChange(config.mode)
 		}
@@ -41,6 +42,7 @@ const LobbySettingsForm: React.FC<LobbySettingsFormProps> = ({
 			initialValues={{
 				mode: config.mode,
 				roundDuration: config.mode === 'wave-rush' && config.duration,
+				waves: config.mode === 'wave-rush' && config.waves,
 			}}
 			onValuesChange={changedValues => {
 				if (changedValues.mode) {
@@ -53,9 +55,14 @@ const LobbySettingsForm: React.FC<LobbySettingsFormProps> = ({
 				<Radio.Group style={style} options={MULTIPLAYER_MODE_OPTIONS} />
 			</Form.Item>
 			{multiplayerMode === 'wave-rush' && (
-				<Form.Item label='Round Duration:' name='roundDuration' required>
-					<InputNumber min={0} max={15} />
-				</Form.Item>
+				<>
+					<Form.Item label='Round Duration:' name='roundDuration' required>
+						<InputNumber min={0} max={15} />
+					</Form.Item>
+					<Form.Item label='Number of waves:' name='waves' required>
+						<InputNumber min={1} max={5} />
+					</Form.Item>
+				</>
 			)}
 			{isHost && (
 				<Form.Item>

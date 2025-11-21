@@ -6,17 +6,9 @@ import GameStartModal from '../../components/GameStartModal.tsx'
 import { Button, type FormProps } from 'antd'
 import { PiCrownFill } from 'react-icons/pi'
 import GameFinishModal from '../../components/GameFinishModal.tsx'
-import { SAMPLE_WORDS } from '../../common/constant.ts'
+import { SAMPLE_WORDS, WAVE_RUSH_WORDS } from '../../common/constant.ts'
 import type { MultiplayerMode, FieldType } from '../../common/types.ts'
 import LobbySettingsForm from '../../components/GameConfigForm.tsx'
-
-export const WAVE_RUSH_WORDS = [
-	['apple', 'bread', 'chair', 'dance', 'earth'],
-	['flame', 'grace', 'heart', 'ivory', 'juice'],
-	['knife', 'lemon', 'music', 'night', 'ocean'],
-	['paint', 'queen', 'river', 'stone', 'train'],
-	['unity', 'voice', 'water', 'youth', 'zebra'],
-]
 
 const Page = () => {
 	const {
@@ -63,15 +55,26 @@ const Page = () => {
 	}, [connected, error, roomId])
 
 	const handleSaveConfig: FormProps<FieldType>['onFinish'] = values => {
-		console.log('Success:', values)
-		handleConfigChange(
-			{
-				words: ['hello'],
-				mode: values.mode,
-				duration: values.roundDuration,
-			},
-			roomId
-		)
+		const waveRushWords: string[][] = []
+		if (values.mode === 'wave-rush') {
+			for (let i = 0; i < values.waves; i++) {
+				waveRushWords.push(WAVE_RUSH_WORDS[i])
+			}
+		}
+
+		const config =
+			values.mode === 'type-race'
+				? {
+						mode: values.mode,
+						words: ['hello'],
+					}
+				: {
+						words: waveRushWords,
+						mode: values.mode,
+						duration: values.roundDuration,
+						waves: values.waves,
+					}
+		handleConfigChange(config, roomId)
 	}
 
 	return (

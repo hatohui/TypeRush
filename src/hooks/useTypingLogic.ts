@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react'
-import { CharacterState, InputKey } from '../common/types.ts'
+import { BlockedKeysSet, CharacterState, InputKey } from '../common/types.ts'
 import { MAX_OVERFLOW } from '../common/constant.ts'
 
 const useTypingLogic = (words: string[]) => {
@@ -76,8 +76,21 @@ const useTypingLogic = (words: string[]) => {
 		return state
 	}
 
-	const onKeyDownPracticeMode = (e: React.KeyboardEvent<HTMLInputElement>) => {
+	const isBlockedKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		return BlockedKeysSet.has(e.key)
+	}
+
+	const onKeyDownPracticeMode = (
+		e: React.KeyboardEvent<HTMLInputElement>,
+		startTime: number | null,
+		setStartTime: (value: React.SetStateAction<number | null>) => void
+	) => {
 		{
+			if (isBlockedKey(e)) {
+				e.preventDefault()
+				return
+			}
+
 			if (
 				typed.length > words[currentWordIdx].length + MAX_OVERFLOW &&
 				e.key !== InputKey.BACKSPACE
@@ -87,21 +100,6 @@ const useTypingLogic = (words: string[]) => {
 			if (e.key === InputKey.SPACE) {
 				e.preventDefault()
 				handleSpacePress()
-				return
-			}
-
-			if (
-				[
-					InputKey.ENTER,
-					InputKey.TAB,
-					InputKey.ALT,
-					InputKey.ARROW_UP,
-					InputKey.ARROW_DOWN,
-					InputKey.ARROW_LEFT,
-					InputKey.ARROW_RIGHT,
-				].includes(e.key)
-			) {
-				e.preventDefault()
 				return
 			}
 
@@ -137,10 +135,17 @@ const useTypingLogic = (words: string[]) => {
 
 			setCaretIdx(prev => prev + 1)
 			setTyped(prev => prev + e.key)
+
+			if (!startTime) setStartTime(Date.now())
 		}
 	}
 
 	const onKeyDownMultiplayer = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (isBlockedKey(e)) {
+			e.preventDefault()
+			return
+		}
+
 		if (e.key === InputKey.SPACE) {
 			handleSpacePress()
 			e.preventDefault()
@@ -197,6 +202,7 @@ const useTypingLogic = (words: string[]) => {
 		onKeyDownPracticeMode,
 		getCharStyle,
 		onKeyDownMultiplayer,
+		isBlockedKey,
 	}
 }
 

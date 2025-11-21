@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import type { GameDuration } from '../common/types.ts'
 import ModeBar from './modeBar.tsx'
-import MainGameContainer from './MainGameContainer.tsx'
 import { SAMPLE_WORDS } from '../common/constant.ts'
+import PracticeGameContainer from './PracticeGameContainer.tsx'
 
 const PracticeMode = () => {
 	const [selectedDuration, setSelectedDuration] = useState<GameDuration>(0)
@@ -12,11 +12,7 @@ const PracticeMode = () => {
 				selectedDuration={selectedDuration}
 				setSelectedDuration={setSelectedDuration}
 			/>
-			<MainGameContainer
-				words={SAMPLE_WORDS}
-				mode={'practice'}
-				duration={selectedDuration}
-			/>
+			<PracticeGameContainer words={SAMPLE_WORDS} duration={selectedDuration} />
 		</div>
 	)
 }

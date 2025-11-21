@@ -15,7 +15,7 @@ const useGameTimer = (isMultiplayer: boolean) => {
 		if (!shouldStart) return
 
 		timerRef.current = setInterval(() => {
-			setTimeElapsed(prev => prev + 0.1)
+			setTimeElapsed(prev => Number((prev + 0.1).toFixed(1)))
 		}, 100)
 
 		return () => {

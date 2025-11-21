@@ -35,6 +35,14 @@ export const SAMPLE_WORDS = [
 	// 'water',
 ]
 
+export const WAVE_RUSH_WORDS = [
+	['apple', 'bread', 'chair', 'dance', 'earth'],
+	['flame', 'grace', 'heart', 'ivory', 'juice'],
+	['knife', 'lemon', 'music', 'night', 'ocean'],
+	['paint', 'queen', 'river', 'stone', 'train'],
+	['unity', 'voice', 'water', 'youth', 'zebra'],
+]
+
 export const MULTIPLAYER_MODES = [
 	{ value: 'type-race', label: 'Type Race' },
 	{ value: 'wave-rush', label: 'Wave Rush' },

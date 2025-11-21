@@ -154,7 +154,7 @@ const useCaretAnimation = ({
 			otherPlayers.forEach((player, playerIndex) => {
 				const caretElement = caretRefs.current[playerIndex]
 				if (!caretElement) {
-					console.log('not found', caretRefs)
+					return
 				}
 
 				console.log(

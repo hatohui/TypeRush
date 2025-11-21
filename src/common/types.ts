@@ -23,9 +23,10 @@ export type GameConfig =
 			mode: 'type-race'
 	  }
 	| {
-			words: string[]
+			words: string[][]
 			mode: 'wave-rush'
 			duration: number
+			waves: number
 	  }
 
 export interface PlayerStats {
@@ -99,10 +100,66 @@ export const InputKey = {
 	ARROW_RIGHT: 'ArrowRight',
 	ARROW_UP: 'ArrowUp',
 	ARROW_DOWN: 'ArrowDown',
+	CONTROL: 'Control',
+	META: 'Meta',
+	SHIFT: 'Shift',
+	CAPSLOCK: 'CapsLock',
+	ESCAPE: 'Escape',
+	FUNCTIONS: [
+		'F1',
+		'F2',
+		'F3',
+		'F4',
+		'F5',
+		'F6',
+		'F7',
+		'F8',
+		'F9',
+		'F10',
+		'F11',
+		'F12',
+	],
+	DELETE: 'Delete',
+	INSERT: 'Insert',
+	PAGEUP: 'PageUp',
+	PAGEDOWN: 'PageDown',
+	NUMLOCK: 'NumLock',
 	TAB: 'Tab',
 	ENTER: 'Enter',
 	ALT: 'Alt',
 }
+
+export const BlockedKeysSet = new Set([
+	InputKey.ENTER,
+	InputKey.TAB,
+	InputKey.ALT,
+	InputKey.ARROW_UP,
+	InputKey.ARROW_DOWN,
+	InputKey.ARROW_LEFT,
+	InputKey.ARROW_RIGHT,
+	InputKey.CONTROL,
+	InputKey.META,
+	InputKey.SHIFT,
+	InputKey.NUMLOCK,
+	InputKey.CAPSLOCK,
+	InputKey.ESCAPE,
+	'F1',
+	'F2',
+	'F3',
+	'F4',
+	'F5',
+	'F6',
+	'F7',
+	'F8',
+	'F9',
+	'F10',
+	'F11',
+	'F12',
+	InputKey.PAGEUP,
+	InputKey.PAGEDOWN,
+	InputKey.DELETE,
+	InputKey.INSERT,
+])
 
 export const TypingMode = {
 	PRACTICE: 'practice',
@@ -134,6 +191,7 @@ export type SingleplayerResultType = {
 export type FieldType = {
 	mode: MultiplayerMode
 	roundDuration: number
+	waves: number
 }
 
 export interface LobbySettingsFormProps {

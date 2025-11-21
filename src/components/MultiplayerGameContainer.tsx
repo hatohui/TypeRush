@@ -11,6 +11,7 @@ import useTypingStats from '../hooks/useTypingStats.ts'
 import useGameTimer from '../hooks/useGameTimer.ts'
 import useTypingLogic from '../hooks/useTypingLogic.ts'
 import useCaretAnimation from '../hooks/useCaretAnimation.ts'
+import TypingArea from './TypingArea.tsx'
 
 gsap.registerPlugin(Flip)
 
@@ -143,34 +144,13 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 						color={getPlayerColor(playerIndex)}
 					/>
 				))}
-				{localWords?.map((word, wordIdx) => (
-					<span key={wordIdx}>
-						{word === currentWord && (
-							<input
-								className='text-3xl opacity-0 absolute flex focus:outline-none focus:ring-0 focus:border-transparent'
-								autoFocus
-								type='text'
-								value={typed}
-								onKeyDown={e => {
-									onKeyDownMultiplayer(e)
-								}}
-							/>
-						)}
-						{word?.split('').map((char, charIdx) => {
-							const state = getCharStyle(wordIdx, charIdx, char)
-							return (
-								<span
-									key={charIdx}
-									className={state}
-									data-word={wordIdx}
-									data-char={charIdx}
-								>
-									{char}
-								</span>
-							)
-						})}
-					</span>
-				))}
+				<TypingArea
+					localWords={localWords}
+					currentWord={currentWord}
+					typed={typed}
+					onKeyDown={onKeyDownMultiplayer}
+					getCharStyle={getCharStyle}
+				/>
 			</div>
 
 			{results && (

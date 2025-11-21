@@ -15,6 +15,7 @@ import useTypingStats from '../hooks/useTypingStats.ts'
 import useGameTimer from '../hooks/useGameTimer.ts'
 import useTypingLogic from '../hooks/useTypingLogic.ts'
 import useCaretAnimation from '../hooks/useCaretAnimation.ts'
+import TypingArea from './TypingArea.tsx'
 
 gsap.registerPlugin(Flip)
 
@@ -63,7 +64,7 @@ const PracticeGameContainer = ({
 			setResults(stats)
 			stopTimer()
 		}
-	}, [calculateStats, timeElapsed, duration, timerRef, resetTimer, stopTimer])
+	}, [calculateStats, timeElapsed, duration, timerRef, stopTimer])
 
 	// Check if finished typing all words
 	useEffect(() => {
@@ -91,6 +92,7 @@ const PracticeGameContainer = ({
 		resetTypingState()
 		resetTimer()
 		setResults(null)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [duration])
 
 	const { containerRef, caretRef } = useCaretAnimation({
@@ -120,37 +122,13 @@ const PracticeGameContainer = ({
 			>
 				<Caret ref={caretRef} color={PlayerColor.BLUE} />
 
-				{localWords?.map((word, wordIdx) => (
-					<span key={wordIdx}>
-						{word === currentWord && (
-							<input
-								className='text-3xl opacity-0 absolute flex focus:outline-none focus:ring-0 focus:border-transparent'
-								autoFocus
-								type='text'
-								value={typed}
-								onKeyDown={e => {
-									onKeyDownPracticeMode(e)
-									if (!startTime) {
-										setStartTime(Date.now())
-									}
-								}}
-							/>
-						)}
-						{word?.split('').map((char, charIdx) => {
-							const state = getCharStyle(wordIdx, charIdx, char)
-							return (
-								<span
-									key={charIdx}
-									className={state}
-									data-word={wordIdx}
-									data-char={charIdx}
-								>
-									{char}
-								</span>
-							)
-						})}
-					</span>
-				))}
+				<TypingArea
+					localWords={localWords}
+					currentWord={currentWord}
+					typed={typed}
+					onKeyDown={e => onKeyDownPracticeMode(e, startTime, setStartTime)}
+					getCharStyle={getCharStyle}
+				/>
 			</div>
 
 			{results && (
