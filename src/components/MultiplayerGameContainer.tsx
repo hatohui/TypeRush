@@ -10,7 +10,6 @@ import {
 	PlayerColor,
 	type SingleplayerResultType,
 } from '../common/types.ts'
-import { MAX_OVERFLOW } from '../common/constant.ts'
 import GameFinishModalSingle from './GameFinishModalSingle.tsx'
 import CountdownProgress from './CountdownProgress.tsx'
 
@@ -39,7 +38,9 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 
 	const [localWords, setLocalWords] = useState<string[]>(words)
 	const [currentWordIdx, setCurrentWordIdx] = useState(0)
-	const [currentWord, setCurrentWord] = useState<string | null>(localWords[currentWordIdx])
+	const [currentWord, setCurrentWord] = useState<string | null>(
+		localWords[currentWordIdx]
+	)
 	const [typed, setTyped] = useState<string>('')
 	const [caretIdx, setCaretIdx] = useState(-1)
 	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
@@ -71,12 +72,12 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 
 		const totalTyped = correct + incorrect
 		const accuracy = totalTyped > 0 ? (correct / totalTyped) * 100 : 0
-		const timeInMinutes = duration !== 0 ? duration / 60 : timeElapsed / 60
-		const wpm = correct / 5 / timeInMinutes
-		const rawWpm = totalTyped / 5 / timeInMinutes
+		const timeInMinutes = timeElapsed / 60
+		const wpm = timeInMinutes > 0 ? correct / 5 / timeInMinutes : 0
+		const rawWpm = timeInMinutes > 0 ? totalTyped / 5 / timeInMinutes : 0
 
 		return { accuracy, wpm, rawWpm, correct, incorrect }
-	}, [wordResults, duration, timeElapsed])
+	}, [wordResults, timeElapsed])
 
 	const handleSpacePress = () => {
 		if (typed.trim() === '') return
@@ -86,7 +87,9 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 
 		const currentResults = words[currentWordIdx].split('').map((char, idx) => {
 			if (idx < typed.length) {
-				return typed[idx] === char ? CharacterState.CORRECT : CharacterState.INCORRECT
+				return typed[idx] === char
+					? CharacterState.CORRECT
+					: CharacterState.INCORRECT
 			}
 			return CharacterState.UNTYPED
 		})
@@ -128,16 +131,12 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		caretRefs.current = Array.from({ length: 4 }, () => null)
 	}, [])
 
-	// Timer effect for wave-rush mode - starts when game starts
+	// Timer effect - starts when game starts (both type-race and wave-rush)
 	useEffect(() => {
-		if (config?.mode !== 'wave-rush') return
 		if (!isGameStarted) return
 
 		timerRef.current = setInterval(() => {
-			setTimeElapsed(prev => {
-				const newValue = prev + 0.1
-				return newValue
-			})
+			setTimeElapsed(prev => prev + 0.1)
 		}, 100)
 
 		return () => {
@@ -146,7 +145,7 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 				timerRef.current = null
 			}
 		}
-	}, [isGameStarted, config?.mode])
+	}, [isGameStarted])
 
 	// Check if time is up (wave-rush mode)
 	useEffect(() => {
@@ -168,7 +167,14 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 			if (timerRef.current) clearInterval(timerRef.current)
 			handlePlayerFinish(roomId, stats)
 		}
-	}, [currentWordIdx, caretIdx, words, calculateStats, handlePlayerFinish, roomId])
+	}, [
+		currentWordIdx,
+		caretIdx,
+		words,
+		calculateStats,
+		handlePlayerFinish,
+		roomId,
+	])
 
 	// Update caret position to server
 	useEffect(() => {
@@ -259,7 +265,7 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 			duration: 0.15,
 			ease: 'power1.inOut',
 		})
-	}, [currentWordIdx, caretIdx, localWords])
+	}, [currentWordIdx, caretIdx])
 
 	// Initial caret positioning for all players
 	useEffect(() => {
@@ -352,7 +358,6 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 								type='text'
 								value={typed}
 								onKeyDown={e => {
-
 									if (e.key === InputKey.SPACE) {
 										handleSpacePress()
 										e.preventDefault()
@@ -412,7 +417,12 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 								}
 							}
 							return (
-								<span key={idx} className={state} data-word={wordIdx} data-char={idx}>
+								<span
+									key={idx}
+									className={state}
+									data-word={wordIdx}
+									data-char={idx}
+								>
 									{char}
 								</span>
 							)

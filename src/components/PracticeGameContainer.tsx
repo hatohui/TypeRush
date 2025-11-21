@@ -22,14 +22,19 @@ interface PracticeGameContainerProps {
 	duration: GameDuration
 }
 
-const PracticeGameContainer = ({ words, duration }: PracticeGameContainerProps) => {
+const PracticeGameContainer = ({
+	words,
+	duration,
+}: PracticeGameContainerProps) => {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const caretRef = useRef<HTMLSpanElement | null>(null)
 	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
 	const [localWords, setLocalWords] = useState<string[]>(words)
 	const [currentWordIdx, setCurrentWordIdx] = useState(0)
-	const [currentWord, setCurrentWord] = useState<string | null>(localWords[currentWordIdx])
+	const [currentWord, setCurrentWord] = useState<string | null>(
+		localWords[currentWordIdx]
+	)
 	const [typed, setTyped] = useState<string>('')
 	const [caretIdx, setCaretIdx] = useState(-1)
 	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
@@ -50,7 +55,7 @@ const PracticeGameContainer = ({ words, duration }: PracticeGameContainerProps) 
 
 		const totalTyped = correct + incorrect
 		const accuracy = totalTyped > 0 ? (correct / totalTyped) * 100 : 0
-		const timeInMinutes = duration !== 0 ? duration / 60 : timeElapsed / 60
+		const timeInMinutes = timeElapsed / 60
 		const wpm = correct / 5 / timeInMinutes
 		const rawWpm = totalTyped / 5 / timeInMinutes
 
@@ -63,7 +68,9 @@ const PracticeGameContainer = ({ words, duration }: PracticeGameContainerProps) 
 
 		const currentResults = words[currentWordIdx].split('').map((char, idx) => {
 			if (idx < typed.length) {
-				return typed[idx] === char ? CharacterState.CORRECT : CharacterState.INCORRECT
+				return typed[idx] === char
+					? CharacterState.CORRECT
+					: CharacterState.INCORRECT
 			}
 			return CharacterState.UNTYPED
 		})
@@ -225,7 +232,8 @@ const PracticeGameContainer = ({ words, duration }: PracticeGameContainerProps) 
 								value={typed}
 								onKeyDown={e => {
 									if (
-										typed.length > words[currentWordIdx].length + MAX_OVERFLOW &&
+										typed.length >
+											words[currentWordIdx].length + MAX_OVERFLOW &&
 										e.key !== InputKey.BACKSPACE
 									)
 										return
@@ -258,7 +266,10 @@ const PracticeGameContainer = ({ words, duration }: PracticeGameContainerProps) 
 											setTyped(prev => prev.slice(0, -1))
 
 											if (newLength >= words[currentWordIdx].length) {
-												const newWord = localWords[currentWordIdx].slice(0, newLength)
+												const newWord = localWords[currentWordIdx].slice(
+													0,
+													newLength
+												)
 												setLocalWords(prev => {
 													const newLocalWords = [...prev]
 													newLocalWords[currentWordIdx] = newWord
@@ -310,7 +321,12 @@ const PracticeGameContainer = ({ words, duration }: PracticeGameContainerProps) 
 								}
 							}
 							return (
-								<span key={idx} className={state} data-word={wordIdx} data-char={idx}>
+								<span
+									key={idx}
+									className={state}
+									data-word={wordIdx}
+									data-char={idx}
+								>
 									{char}
 								</span>
 							)
