@@ -12,6 +12,8 @@ import {
 } from '../common/types.ts'
 import GameFinishModalSingle from './GameFinishModalSingle.tsx'
 import CountdownProgress from './CountdownProgress.tsx'
+import useTypingStats from '../hooks/useTypingStats.ts'
+import useGameTimer from '../hooks/useGameTimer.ts'
 
 gsap.registerPlugin(Flip)
 
@@ -22,7 +24,6 @@ interface MultiplayerGameContainerProps {
 const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
-	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
 	const {
 		updateCaret,
@@ -31,9 +32,8 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		socket,
 		handlePlayerFinish,
 		position,
-		gameReset,
+		resetPlayersCaret,
 		config,
-		isGameStarted,
 	} = useGameStore()
 
 	const [localWords, setLocalWords] = useState<string[]>(words)
@@ -45,7 +45,6 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 	const [caretIdx, setCaretIdx] = useState(-1)
 	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
 	const [results, setResults] = useState<null | SingleplayerResultType>(null)
-	const [timeElapsed, setTimeElapsed] = useState<number>(0)
 
 	const duration = config?.mode === 'wave-rush' ? config.duration : 0
 
@@ -59,25 +58,8 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		return colors[playerIndex] || PlayerColor.GRAY
 	}
 
-	const calculateStats = useCallback(() => {
-		let correct = 0
-		let incorrect = 0
-
-		Object.values(wordResults).forEach(results => {
-			results.forEach(r => {
-				if (r === CharacterState.CORRECT) correct++
-				if (r === CharacterState.INCORRECT) incorrect++
-			})
-		})
-
-		const totalTyped = correct + incorrect
-		const accuracy = totalTyped > 0 ? (correct / totalTyped) * 100 : 0
-		const timeInMinutes = timeElapsed / 60
-		const wpm = timeInMinutes > 0 ? correct / 5 / timeInMinutes : 0
-		const rawWpm = timeInMinutes > 0 ? totalTyped / 5 / timeInMinutes : 0
-
-		return { accuracy, wpm, rawWpm, correct, incorrect }
-	}, [wordResults, timeElapsed])
+	const { timeElapsed, resetTimer, timerRef } = useGameTimer(true)
+	const { calculateStats } = useTypingStats(wordResults, timeElapsed)
 
 	const handleSpacePress = () => {
 		if (typed.trim() === '') return
@@ -117,44 +99,24 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		if (roomId) {
 			updateCaret({ caretIdx: -1, wordIdx: 0 }, roomId)
 		}
-		if (timerRef.current) {
-			clearInterval(timerRef.current)
-			timerRef.current = null
-		}
-		setTimeElapsed(0)
+		resetTimer()
 		setResults(null)
-		gameReset()
-	}, [words, roomId, updateCaret, gameReset])
+		resetPlayersCaret()
+	}, [words, roomId, resetTimer, resetPlayersCaret, updateCaret])
 
 	// Initialize caret refs
 	useEffect(() => {
 		caretRefs.current = Array.from({ length: 4 }, () => null)
 	}, [])
 
-	// Timer effect - starts when game starts (both type-race and wave-rush)
-	useEffect(() => {
-		if (!isGameStarted) return
-
-		timerRef.current = setInterval(() => {
-			setTimeElapsed(prev => prev + 0.1)
-		}, 100)
-
-		return () => {
-			if (timerRef.current) {
-				clearInterval(timerRef.current)
-				timerRef.current = null
-			}
-		}
-	}, [isGameStarted])
-
 	// Check if time is up (wave-rush mode)
 	useEffect(() => {
 		if (duration !== 0 && timeElapsed >= duration && timerRef.current) {
 			const stats = calculateStats()
 			setResults(stats)
-			if (timerRef.current) clearInterval(timerRef.current)
+			resetTimer()
 		}
-	}, [calculateStats, timeElapsed, duration])
+	}, [calculateStats, timeElapsed, duration, timerRef, resetTimer])
 
 	// Check if finished typing all words
 	useEffect(() => {
@@ -164,7 +126,7 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		) {
 			const stats = calculateStats()
 			setResults(stats)
-			if (timerRef.current) clearInterval(timerRef.current)
+			resetTimer()
 			handlePlayerFinish(roomId, stats)
 		}
 	}, [
@@ -174,6 +136,8 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		calculateStats,
 		handlePlayerFinish,
 		roomId,
+		timerRef,
+		resetTimer,
 	])
 
 	// Update caret position to server

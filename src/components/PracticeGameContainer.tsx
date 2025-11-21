@@ -1,19 +1,20 @@
 import { Button } from 'antd'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
 import { Flip } from 'gsap/Flip'
 import {
-	InputKey,
-	CharacterState,
 	PlayerColor,
 	type GameDuration,
 	type SingleplayerResultType,
 } from '../common/types.ts'
 import { TbReload } from 'react-icons/tb'
-import { MAX_OVERFLOW } from '../common/constant.ts'
 import GameFinishModalSingle from './GameFinishModalSingle.tsx'
 import CountdownProgress from './CountdownProgress.tsx'
+import useTypingStats from '../hooks/useTypingStats.ts'
+import useGameTimer from '../hooks/useGameTimer.ts'
+import useTypingLogic from '../hooks/useTypingLogic.ts'
+import useCaretAnimation from '../hooks/useCaretAnimation.ts'
 
 gsap.registerPlugin(Flip)
 
@@ -26,182 +27,76 @@ const PracticeGameContainer = ({
 	words,
 	duration,
 }: PracticeGameContainerProps) => {
-	const containerRef = useRef<HTMLDivElement>(null)
-	const caretRef = useRef<HTMLSpanElement | null>(null)
-	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-	const [localWords, setLocalWords] = useState<string[]>(words)
-	const [currentWordIdx, setCurrentWordIdx] = useState(0)
-	const [currentWord, setCurrentWord] = useState<string | null>(
-		localWords[currentWordIdx]
-	)
-	const [typed, setTyped] = useState<string>('')
-	const [caretIdx, setCaretIdx] = useState(-1)
-	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
 	const [results, setResults] = useState<null | SingleplayerResultType>(null)
-	const [startTime, setStartTime] = useState<number | null>(null)
-	const [timeElapsed, setTimeElapsed] = useState<number>(0)
 
-	const calculateStats = useCallback(() => {
-		let correct = 0
-		let incorrect = 0
+	const {
+		timeElapsed,
+		startTime,
+		setStartTime,
+		resetTimer,
+		stopTimer,
+		timerRef,
+	} = useGameTimer(false)
+	const {
+		currentWordIdx,
+		currentWord,
+		typed,
+		caretIdx,
+		wordResults,
+		resetTypingState,
+		localWords,
+		onKeyDownPracticeMode,
+		getCharStyle,
+	} = useTypingLogic(words)
+	const { calculateStats } = useTypingStats(wordResults, timeElapsed)
 
-		Object.values(wordResults).forEach(results => {
-			results.forEach(r => {
-				if (r === CharacterState.CORRECT) correct++
-				if (r === CharacterState.INCORRECT) incorrect++
-			})
-		})
-
-		const totalTyped = correct + incorrect
-		const accuracy = totalTyped > 0 ? (correct / totalTyped) * 100 : 0
-		const timeInMinutes = timeElapsed / 60
-		const wpm = correct / 5 / timeInMinutes
-		const rawWpm = totalTyped / 5 / timeInMinutes
-
-		return { accuracy, wpm, rawWpm, correct, incorrect }
-	}, [wordResults, duration, timeElapsed])
-
-	const handleSpacePress = () => {
-		if (typed.trim() === '') return
-		setCaretIdx(-1)
-
-		const currentResults = words[currentWordIdx].split('').map((char, idx) => {
-			if (idx < typed.length) {
-				return typed[idx] === char
-					? CharacterState.CORRECT
-					: CharacterState.INCORRECT
-			}
-			return CharacterState.UNTYPED
-		})
-
-		if (typed.length > words[currentWordIdx].length) {
-			const overflowCount = typed.length - words[currentWordIdx].length
-			for (let i = 0; i < overflowCount; i++) {
-				currentResults.push(CharacterState.INCORRECT)
-			}
-		}
-
-		setWordResults(prev => ({
-			...prev,
-			[currentWordIdx]: currentResults,
-		}))
-
-		setCurrentWordIdx(prev => {
-			const nextIdx = prev + 1
-			setCurrentWord(localWords[nextIdx] ?? null)
-			return nextIdx
-		})
-		setTyped('')
-	}
-
-	const handleReset = useCallback(() => {
-		setCurrentWordIdx(0)
-		setTyped('')
-		setCurrentWord(words[0] ?? null)
-		setWordResults({})
-		setCaretIdx(-1)
-		setLocalWords(words)
-		if (timerRef.current) {
-			clearInterval(timerRef.current)
-			timerRef.current = null
-		}
-		setStartTime(null)
-		setTimeElapsed(0)
+	const resetGameState = useCallback(() => {
+		resetTypingState()
+		resetTimer()
 		setResults(null)
-	}, [words, duration])
-
-	// Timer effect
-	useEffect(() => {
-		if (!startTime) return
-
-		timerRef.current = setInterval(() => {
-			if (duration !== 0) setTimeElapsed(prev => prev + 0.1)
-			else setTimeElapsed(prev => prev + 0.1)
-		}, 100)
-
-		return () => {
-			if (timerRef.current) {
-				clearInterval(timerRef.current)
-				timerRef.current = null
-			}
-		}
-	}, [duration, startTime])
+	}, [resetTimer, resetTypingState])
 
 	// Check if time is up
 	useEffect(() => {
 		if (duration !== 0 && timeElapsed >= duration && timerRef.current) {
 			const stats = calculateStats()
 			setResults(stats)
-			if (timerRef.current) clearInterval(timerRef.current)
+			stopTimer()
 		}
-	}, [calculateStats, timeElapsed, duration])
+	}, [calculateStats, timeElapsed, duration, timerRef, resetTimer, stopTimer])
 
 	// Check if finished typing all words
 	useEffect(() => {
 		if (
 			currentWordIdx === words.length - 1 &&
-			caretIdx === words[currentWordIdx].length - 1
+			caretIdx === words[currentWordIdx].length - 1 &&
+			timerRef.current
 		) {
 			const stats = calculateStats()
 			setResults(stats)
-			if (timerRef.current) clearInterval(timerRef.current)
+			stopTimer()
 		}
-	}, [currentWordIdx, caretIdx, words, calculateStats])
+	}, [
+		currentWordIdx,
+		caretIdx,
+		words,
+		calculateStats,
+		resetTimer,
+		stopTimer,
+		timerRef,
+	])
 
-	// Animate caret
+	//Reset game when duration changes
 	useEffect(() => {
-		const caretElement = caretRef.current
-		if (!caretElement) return
+		resetTypingState()
+		resetTimer()
+		setResults(null)
+	}, [duration])
 
-		let target: HTMLElement | null = null
-		if (caretIdx === -1) {
-			target = containerRef.current?.querySelector(
-				`[data-word="${currentWordIdx}"][data-char="0"]`
-			) as HTMLElement | null
-
-			if (target) {
-				const state = Flip.getState(caretElement)
-				target.parentNode?.insertBefore(caretElement, target)
-				Flip.from(state, {
-					duration: 0.4,
-					ease: 'power1.inOut',
-				})
-			}
-			return
-		}
-
-		target = containerRef.current?.querySelector(
-			`[data-word="${currentWordIdx}"][data-char="${caretIdx}"]`
-		) as HTMLElement | null
-
-		if (!target) return
-
-		const state = Flip.getState(caretElement)
-		target.appendChild(caretElement)
-		Flip.from(state, {
-			duration: 0.15,
-			ease: 'power1.inOut',
-		})
-	}, [currentWordIdx, caretIdx, localWords])
-
-	// Initial caret positioning
-	useEffect(() => {
-		if (!containerRef.current) return
-
-		requestAnimationFrame(() => {
-			const caretElement = caretRef.current
-			if (caretElement) {
-				const target = containerRef.current?.querySelector(
-					`[data-word="0"][data-char="0"]`
-				) as HTMLElement | null
-
-				if (target) {
-					target.parentNode?.insertBefore(caretElement, target)
-				}
-			}
-		})
-	}, [])
+	const { containerRef, caretRef } = useCaretAnimation({
+		caretIdx,
+		currentWordIdx,
+	})
 
 	return (
 		<div>
@@ -231,101 +126,21 @@ const PracticeGameContainer = ({
 								type='text'
 								value={typed}
 								onKeyDown={e => {
-									if (
-										typed.length >
-											words[currentWordIdx].length + MAX_OVERFLOW &&
-										e.key !== InputKey.BACKSPACE
-									)
-										return
-
-									if (e.key === InputKey.SPACE) {
-										e.preventDefault()
-										handleSpacePress()
-										return
-									}
-
-									if (
-										[
-											InputKey.ENTER,
-											InputKey.TAB,
-											InputKey.ALT,
-											InputKey.ARROW_UP,
-											InputKey.ARROW_DOWN,
-											InputKey.ARROW_LEFT,
-											InputKey.ARROW_RIGHT,
-										].includes(e.key)
-									) {
-										e.preventDefault()
-										return
-									}
-
-									if (e.key === InputKey.BACKSPACE) {
-										if (typed.length > 0) {
-											const newLength = typed.length - 1
-											setCaretIdx(prev => Math.max(-1, prev - 1))
-											setTyped(prev => prev.slice(0, -1))
-
-											if (newLength >= words[currentWordIdx].length) {
-												const newWord = localWords[currentWordIdx].slice(
-													0,
-													newLength
-												)
-												setLocalWords(prev => {
-													const newLocalWords = [...prev]
-													newLocalWords[currentWordIdx] = newWord
-													return newLocalWords
-												})
-												setCurrentWord(newWord)
-												setTyped(newWord)
-											}
-										}
-										return
-									}
-
+									onKeyDownPracticeMode(e)
 									if (!startTime) {
 										setStartTime(Date.now())
 									}
-
-									if (typed.length >= words[currentWordIdx].length) {
-										const newWord = localWords[currentWordIdx] + e.key
-										setLocalWords(prev => {
-											const newLocalWords = [...prev]
-											newLocalWords[currentWordIdx] = newWord
-											return newLocalWords
-										})
-										setCurrentWord(newWord)
-									}
-
-									setCaretIdx(prev => prev + 1)
-									setTyped(prev => prev + e.key)
 								}}
 							/>
 						)}
-						{word?.split('').map((char, idx) => {
-							let state = ''
-							if (wordIdx < currentWordIdx) {
-								const storedResults = wordResults[wordIdx]
-								if (storedResults && storedResults[idx]) {
-									state =
-										storedResults[idx] === CharacterState.CORRECT
-											? 'text-white'
-											: storedResults[idx] === CharacterState.INCORRECT
-												? 'text-red-500 underline'
-												: ''
-								}
-							} else if (wordIdx === currentWordIdx) {
-								if (idx >= words[currentWordIdx].length) {
-									state = 'text-red-500'
-								} else if (idx < typed.length) {
-									state = typed[idx] === char ? 'text-white' : 'text-red-500'
-								}
-							}
+						{word?.split('').map((char, charIdx) => {
+							const state = getCharStyle(wordIdx, charIdx, char)
 							return (
 								<span
-									key={idx}
+									key={charIdx}
 									className={state}
 									data-word={wordIdx}
-									data-char={idx}
+									data-char={charIdx}
 								>
 									{char}
 								</span>
@@ -338,9 +153,9 @@ const PracticeGameContainer = ({
 			{results && (
 				<GameFinishModalSingle
 					open={!!results}
-					onCancel={handleReset}
+					onCancel={resetGameState}
 					footer={[
-						<Button key='close' onClick={handleReset}>
+						<Button key='close' onClick={resetGameState}>
 							Close
 						</Button>,
 					]}
@@ -352,7 +167,7 @@ const PracticeGameContainer = ({
 
 			<TbReload
 				className='size-8 cursor-pointer mt-[50px] mx-auto text-gray-400'
-				onClick={handleReset}
+				onClick={resetGameState}
 			/>
 		</div>
 	)

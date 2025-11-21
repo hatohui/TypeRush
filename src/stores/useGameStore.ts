@@ -112,11 +112,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 		socket.on('gameStopped', () => {
 			set({ isGameStarted: false })
-			get().gameReset()
+			get().resetPlayersCaret()
 		})
 
 		socket.on('configChanged', config => {
-			console.log('new config', config)
 			set({ config: config })
 		})
 	},
@@ -190,7 +189,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 		set({ displayFinishModal: displayFinishModal })
 	},
 
-	gameReset: () => {
+	resetPlayersCaret: () => {
 		set(state => ({
 			players: state.players.map(player => ({
 				...player,

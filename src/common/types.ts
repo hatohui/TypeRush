@@ -80,7 +80,7 @@ export interface GameState {
 	setRenderStartModal: (renderStartModal: boolean) => void
 	handlePlayerFinish: (roomId: string | null, stats: PlayerStats) => void
 	setDisplayFinishModal: (displayFinishModal: boolean) => void
-	gameReset: () => void
+	resetPlayersCaret: () => void
 	handleConfigChange: (config: GameConfig, roomId: string | null) => void
 }
 
