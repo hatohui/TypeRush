@@ -96,6 +96,9 @@ const PracticeGameContainer = ({
 	const { containerRef, caretRef } = useCaretAnimation({
 		caretIdx,
 		currentWordIdx,
+		isMultiplayer: false,
+		socket: null,
+		players: null,
 	})
 
 	return (

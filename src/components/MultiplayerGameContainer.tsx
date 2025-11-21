@@ -1,19 +1,16 @@
 import { Button } from 'antd'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useGameStore } from '../stores/useGameStore.ts'
 import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
 import { Flip } from 'gsap/Flip'
-import {
-	InputKey,
-	CharacterState,
-	PlayerColor,
-	type SingleplayerResultType,
-} from '../common/types.ts'
+import { PlayerColor, type SingleplayerResultType } from '../common/types.ts'
 import GameFinishModalSingle from './GameFinishModalSingle.tsx'
 import CountdownProgress from './CountdownProgress.tsx'
 import useTypingStats from '../hooks/useTypingStats.ts'
 import useGameTimer from '../hooks/useGameTimer.ts'
+import useTypingLogic from '../hooks/useTypingLogic.ts'
+import useCaretAnimation from '../hooks/useCaretAnimation.ts'
 
 gsap.registerPlugin(Flip)
 
@@ -22,9 +19,6 @@ interface MultiplayerGameContainerProps {
 }
 
 const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
-	const containerRef = useRef<HTMLDivElement>(null)
-	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
-
 	const {
 		updateCaret,
 		roomId,
@@ -36,14 +30,17 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		config,
 	} = useGameStore()
 
-	const [localWords, setLocalWords] = useState<string[]>(words)
-	const [currentWordIdx, setCurrentWordIdx] = useState(0)
-	const [currentWord, setCurrentWord] = useState<string | null>(
-		localWords[currentWordIdx]
-	)
-	const [typed, setTyped] = useState<string>('')
-	const [caretIdx, setCaretIdx] = useState(-1)
-	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
+	const {
+		currentWordIdx,
+		currentWord,
+		typed,
+		caretIdx,
+		wordResults,
+		localWords,
+		resetTypingState,
+		getCharStyle,
+		onKeyDownMultiplayer,
+	} = useTypingLogic(words)
 	const [results, setResults] = useState<null | SingleplayerResultType>(null)
 
 	const duration = config?.mode === 'wave-rush' ? config.duration : 0
@@ -58,75 +55,35 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		return colors[playerIndex] || PlayerColor.GRAY
 	}
 
-	const { timeElapsed, resetTimer, timerRef } = useGameTimer(true)
+	const { timeElapsed, resetTimer, timerRef, stopTimer } = useGameTimer(true)
 	const { calculateStats } = useTypingStats(wordResults, timeElapsed)
 
-	const handleSpacePress = () => {
-		if (typed.trim() === '') return
-		if (typed.length !== words[currentWordIdx].length) return
-
-		setCaretIdx(-1)
-
-		const currentResults = words[currentWordIdx].split('').map((char, idx) => {
-			if (idx < typed.length) {
-				return typed[idx] === char
-					? CharacterState.CORRECT
-					: CharacterState.INCORRECT
-			}
-			return CharacterState.UNTYPED
-		})
-
-		setWordResults(prev => ({
-			...prev,
-			[currentWordIdx]: currentResults,
-		}))
-
-		setCurrentWordIdx(prev => {
-			const nextIdx = prev + 1
-			setCurrentWord(localWords[nextIdx] ?? null)
-			return nextIdx
-		})
-		setTyped('')
-	}
-
-	const handleReset = useCallback(() => {
-		setCurrentWordIdx(0)
-		setTyped('')
-		setCurrentWord(words[0] ?? null)
-		setWordResults({})
-		setCaretIdx(-1)
-		setLocalWords(words)
-		if (roomId) {
-			updateCaret({ caretIdx: -1, wordIdx: 0 }, roomId)
-		}
+	const resetGameState = useCallback(() => {
+		resetTypingState()
 		resetTimer()
 		setResults(null)
 		resetPlayersCaret()
-	}, [words, roomId, resetTimer, resetPlayersCaret, updateCaret])
-
-	// Initialize caret refs
-	useEffect(() => {
-		caretRefs.current = Array.from({ length: 4 }, () => null)
-	}, [])
+	}, [resetTypingState, resetTimer, resetPlayersCaret])
 
 	// Check if time is up (wave-rush mode)
 	useEffect(() => {
 		if (duration !== 0 && timeElapsed >= duration && timerRef.current) {
 			const stats = calculateStats()
 			setResults(stats)
-			resetTimer()
+			stopTimer()
 		}
-	}, [calculateStats, timeElapsed, duration, timerRef, resetTimer])
+	}, [calculateStats, timeElapsed, duration, timerRef, stopTimer])
 
 	// Check if finished typing all words
 	useEffect(() => {
 		if (
 			currentWordIdx === words.length - 1 &&
-			caretIdx === words[currentWordIdx].length - 1
+			caretIdx === words[currentWordIdx].length - 1 &&
+			timerRef.current
 		) {
 			const stats = calculateStats()
 			setResults(stats)
-			resetTimer()
+			stopTimer()
 			handlePlayerFinish(roomId, stats)
 		}
 	}, [
@@ -137,7 +94,7 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		handlePlayerFinish,
 		roomId,
 		timerRef,
-		resetTimer,
+		stopTimer,
 	])
 
 	// Update caret position to server
@@ -148,140 +105,13 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		}
 	}, [caretIdx, currentWordIdx, roomId, updateCaret])
 
-	// Animate opponent carets
-	useEffect(() => {
-		if (!socket) return
-
-		const otherPlayers = players.filter(p => p.id !== socket.id)
-
-		otherPlayers.forEach((player, playerIndex) => {
-			const caretElement = caretRefs.current[playerIndex]
-			if (!caretElement) return
-
-			const caret = player.progress?.caret
-			if (!caret) return
-
-			const { caretIdx: playerCaretIdx, wordIdx: playerWordIdx } = caret
-			let target: HTMLElement | null = null
-
-			if (playerCaretIdx === -1) {
-				target = containerRef.current?.querySelector(
-					`[data-word="${playerWordIdx}"][data-char="0"]`
-				) as HTMLElement | null
-
-				if (target) {
-					const state = Flip.getState(caretElement)
-					target.parentNode?.insertBefore(caretElement, target)
-					Flip.from(state, {
-						duration: 0.4,
-						ease: 'power1.inOut',
-					})
-				}
-				return
-			}
-
-			target = containerRef.current?.querySelector(
-				`[data-word="${playerWordIdx}"][data-char="${playerCaretIdx}"]`
-			) as HTMLElement | null
-
-			if (!target) return
-
-			const state = Flip.getState(caretElement)
-			target.appendChild(caretElement)
-			Flip.from(state, {
-				duration: 0.4,
-				ease: 'power1.inOut',
-			})
-		})
-	}, [players, socket])
-
-	// Animate own caret
-	useEffect(() => {
-		const caretElement = caretRefs.current[3]
-		if (!caretElement) return
-
-		let target: HTMLElement | null = null
-		if (caretIdx === -1) {
-			target = containerRef.current?.querySelector(
-				`[data-word="${currentWordIdx}"][data-char="0"]`
-			) as HTMLElement | null
-
-			if (target) {
-				const state = Flip.getState(caretElement)
-				target.parentNode?.insertBefore(caretElement, target)
-				Flip.from(state, {
-					duration: 0.4,
-					ease: 'power1.inOut',
-				})
-			}
-			return
-		}
-
-		target = containerRef.current?.querySelector(
-			`[data-word="${currentWordIdx}"][data-char="${caretIdx}"]`
-		) as HTMLElement | null
-
-		if (!target) return
-
-		const state = Flip.getState(caretElement)
-		target.appendChild(caretElement)
-		Flip.from(state, {
-			duration: 0.15,
-			ease: 'power1.inOut',
-		})
-	}, [currentWordIdx, caretIdx])
-
-	// Initial caret positioning for all players
-	useEffect(() => {
-		if (!containerRef.current) return
-
-		requestAnimationFrame(() => {
-			// Position own caret
-			const ownCaretElement = caretRefs.current[3]
-			if (ownCaretElement) {
-				const target = containerRef.current?.querySelector(
-					`[data-word="0"][data-char="0"]`
-				) as HTMLElement | null
-
-				if (target) {
-					target.parentNode?.insertBefore(ownCaretElement, target)
-				}
-			}
-
-			// Position other players' carets
-			if (!socket) return
-			const otherPlayers = players.filter(p => p.id !== socket.id)
-
-			otherPlayers.forEach((player, playerIndex) => {
-				const caretElement = caretRefs.current[playerIndex]
-				if (!caretElement) return
-
-				const caret = player.progress?.caret
-				const wordIdx = caret?.wordIdx ?? 0
-				const caretIdx = caret?.caretIdx ?? -1
-
-				let target: HTMLElement | null = null
-
-				if (caretIdx === -1) {
-					target = containerRef.current?.querySelector(
-						`[data-word="${wordIdx}"][data-char="0"]`
-					) as HTMLElement | null
-
-					if (target) {
-						target.parentNode?.insertBefore(caretElement, target)
-					}
-				} else {
-					target = containerRef.current?.querySelector(
-						`[data-word="${wordIdx}"][data-char="${caretIdx}"]`
-					) as HTMLElement | null
-
-					if (target) {
-						target.appendChild(caretElement)
-					}
-				}
-			})
-		})
-	}, [])
+	const { containerRef, caretRefs } = useCaretAnimation({
+		caretIdx,
+		currentWordIdx,
+		isMultiplayer: true,
+		socket: socket,
+		players: players,
+	})
 
 	const otherPlayers = socket ? players.filter(p => p.id !== socket.id) : []
 
@@ -322,70 +152,18 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 								type='text'
 								value={typed}
 								onKeyDown={e => {
-									if (e.key === InputKey.SPACE) {
-										handleSpacePress()
-										e.preventDefault()
-										return
-									}
-
-									if (
-										[
-											InputKey.ENTER,
-											InputKey.TAB,
-											InputKey.ALT,
-											InputKey.ARROW_UP,
-											InputKey.ARROW_DOWN,
-											InputKey.ARROW_LEFT,
-											InputKey.ARROW_RIGHT,
-										].includes(e.key)
-									) {
-										e.preventDefault()
-										return
-									}
-
-									if (e.key === InputKey.BACKSPACE) {
-										if (typed.length > 0) {
-											setCaretIdx(prev => Math.max(-1, prev - 1))
-											setTyped(prev => prev.slice(0, -1))
-										}
-										return
-									}
-
-									const nextChar = words[currentWordIdx]?.[caretIdx + 1]
-									if (nextChar && nextChar === e.key) {
-										setCaretIdx(prev => prev + 1)
-										setTyped(prev => prev + e.key)
-									} else {
-										e.preventDefault()
-									}
+									onKeyDownMultiplayer(e)
 								}}
 							/>
 						)}
-						{word?.split('').map((char, idx) => {
-							let state = ''
-							if (wordIdx < currentWordIdx) {
-								const storedResults = wordResults[wordIdx]
-								if (storedResults && storedResults[idx]) {
-									state =
-										storedResults[idx] === CharacterState.CORRECT
-											? 'text-white'
-											: storedResults[idx] === CharacterState.INCORRECT
-												? 'text-red-500 underline'
-												: ''
-								}
-							} else if (wordIdx === currentWordIdx) {
-								if (idx >= words[currentWordIdx].length) {
-									state = 'text-red-500'
-								} else if (idx < typed.length) {
-									state = typed[idx] === char ? 'text-white' : 'text-red-500'
-								}
-							}
+						{word?.split('').map((char, charIdx) => {
+							const state = getCharStyle(wordIdx, charIdx, char)
 							return (
 								<span
-									key={idx}
+									key={charIdx}
 									className={state}
 									data-word={wordIdx}
-									data-char={idx}
+									data-char={charIdx}
 								>
 									{char}
 								</span>
@@ -398,9 +176,9 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 			{results && (
 				<GameFinishModalSingle
 					open={position != null}
-					onCancel={handleReset}
+					onCancel={resetGameState}
 					footer={[
-						<Button key='close' onClick={handleReset}>
+						<Button key='close' onClick={resetGameState}>
 							Close
 						</Button>,
 					]}

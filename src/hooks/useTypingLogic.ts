@@ -140,6 +140,45 @@ const useTypingLogic = (words: string[]) => {
 		}
 	}
 
+	const onKeyDownMultiplayer = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === InputKey.SPACE) {
+			handleSpacePress()
+			e.preventDefault()
+			return
+		}
+
+		if (
+			[
+				InputKey.ENTER,
+				InputKey.TAB,
+				InputKey.ALT,
+				InputKey.ARROW_UP,
+				InputKey.ARROW_DOWN,
+				InputKey.ARROW_LEFT,
+				InputKey.ARROW_RIGHT,
+			].includes(e.key)
+		) {
+			e.preventDefault()
+			return
+		}
+
+		if (e.key === InputKey.BACKSPACE) {
+			if (typed.length > 0) {
+				setCaretIdx(prev => Math.max(-1, prev - 1))
+				setTyped(prev => prev.slice(0, -1))
+			}
+			return
+		}
+
+		const nextChar = words[currentWordIdx]?.[caretIdx + 1]
+		if (nextChar && nextChar === e.key) {
+			setCaretIdx(prev => prev + 1)
+			setTyped(prev => prev + e.key)
+		} else {
+			e.preventDefault()
+		}
+	}
+
 	return {
 		currentWordIdx,
 		currentWord,
@@ -157,6 +196,7 @@ const useTypingLogic = (words: string[]) => {
 		setCurrentWordIdx,
 		onKeyDownPracticeMode,
 		getCharStyle,
+		onKeyDownMultiplayer,
 	}
 }
 
