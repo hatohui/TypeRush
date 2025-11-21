@@ -153,34 +153,24 @@ const useCaretAnimation = ({
 
 			otherPlayers.forEach((player, playerIndex) => {
 				const caretElement = caretRefs.current[playerIndex]
-				if (!caretElement) return
+				if (!caretElement) {
+					console.log('not found', caretRefs)
+				}
 
-				const caret = player.progress?.caret
-				const wordIdx = caret?.wordIdx ?? 0
-				const caretIdx = caret?.caretIdx ?? -1
+				console.log(
+					`caret of player ${player.playerName} found, caret: ${caretElement}`
+				)
 
-				let target: HTMLElement | null = null
+				const target = containerRef.current?.querySelector(
+					`[data-word="0"][data-char="0"]`
+				) as HTMLElement | null
 
-				if (caretIdx === -1) {
-					target = containerRef.current?.querySelector(
-						`[data-word="${wordIdx}"][data-char="0"]`
-					) as HTMLElement | null
-
-					if (target) {
-						target.parentNode?.insertBefore(caretElement, target)
-					}
-				} else {
-					target = containerRef.current?.querySelector(
-						`[data-word="${wordIdx}"][data-char="${caretIdx}"]`
-					) as HTMLElement | null
-
-					if (target) {
-						target.appendChild(caretElement)
-					}
+				if (target) {
+					target.parentNode?.insertBefore(caretElement, target)
 				}
 			})
 		})
-	}, [isMultiplayer])
+	}, [isMultiplayer, caretRefs.current])
 
 	return {
 		containerRef,
