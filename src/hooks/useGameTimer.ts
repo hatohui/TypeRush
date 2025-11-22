@@ -33,6 +33,13 @@ const useGameTimer = (isMultiplayer: boolean) => {
 		}
 	}
 
+	const startTimer = useCallback(() => {
+		if (timerRef.current) return
+		timerRef.current = setInterval(() => {
+			setTimeElapsed(prev => Number((prev + 0.1).toFixed(1)))
+		}, 100)
+	}, [])
+
 	const resetTimer = useCallback(() => {
 		stopTimer()
 		setTimeElapsed(0)
@@ -46,6 +53,7 @@ const useGameTimer = (isMultiplayer: boolean) => {
 		resetTimer,
 		stopTimer,
 		timerRef,
+		startTimer,
 	}
 }
 

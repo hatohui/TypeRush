@@ -152,21 +152,6 @@ const useTypingLogic = (words: string[]) => {
 			return
 		}
 
-		if (
-			[
-				InputKey.ENTER,
-				InputKey.TAB,
-				InputKey.ALT,
-				InputKey.ARROW_UP,
-				InputKey.ARROW_DOWN,
-				InputKey.ARROW_LEFT,
-				InputKey.ARROW_RIGHT,
-			].includes(e.key)
-		) {
-			e.preventDefault()
-			return
-		}
-
 		if (e.key === InputKey.BACKSPACE) {
 			if (typed.length > 0) {
 				setCaretIdx(prev => Math.max(-1, prev - 1))

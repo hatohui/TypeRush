@@ -188,6 +188,17 @@ export type SingleplayerResultType = {
 	incorrect: number
 }
 
+export type WaveRushRoundResultType = SingleplayerResultType & {
+	playerId: string
+	timeElapsed: number
+}
+
+export type WaveRushGameResult = {
+	byPlayer: Record<string, WaveRushRoundResultType[]>
+	byRound: Record<number, WaveRushRoundResultType[]>
+	currentRound: number
+}
+
 export type FieldType = {
 	mode: MultiplayerMode
 	roundDuration: number

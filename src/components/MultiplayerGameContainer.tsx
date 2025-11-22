@@ -1,10 +1,15 @@
 import { Button } from 'antd'
-import { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useGameStore } from '../stores/useGameStore.ts'
 import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
 import { Flip } from 'gsap/Flip'
-import { PlayerColor, type SingleplayerResultType } from '../common/types.ts'
+import {
+	type MultiplayerMode,
+	PlayerColor,
+	type SingleplayerResultType,
+	type WaveRushRoundResultType,
+} from '../common/types.ts'
 import GameFinishModalSingle from './GameFinishModalSingle.tsx'
 import CountdownProgress from './CountdownProgress.tsx'
 import useTypingStats from '../hooks/useTypingStats.ts'
@@ -17,9 +22,26 @@ gsap.registerPlugin(Flip)
 
 interface MultiplayerGameContainerProps {
 	words: string[]
+	mode: MultiplayerMode
+	roundDuration?: number
+	onRoundComplete?: (result: WaveRushRoundResultType) => void
+	timeBetweenRound?: number
+	isRoundComplete?: boolean
+	setIsRoundComplete?: (
+		value: React.Dispatch<React.SetStateAction<boolean>>
+	) => void
+	handleNextRound?: () => void
 }
 
-const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
+const MultiplayerGameContainer = ({
+	words,
+	mode,
+	roundDuration,
+	onRoundComplete,
+	timeBetweenRound = 3,
+	isRoundComplete,
+	handleNextRound,
+}: MultiplayerGameContainerProps) => {
 	const {
 		updateCaret,
 		roomId,
@@ -28,7 +50,6 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		handlePlayerFinish,
 		position,
 		resetPlayersCaret,
-		config,
 	} = useGameStore()
 
 	const {
@@ -44,8 +65,6 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 	} = useTypingLogic(words)
 	const [results, setResults] = useState<null | SingleplayerResultType>(null)
 
-	const duration = config?.mode === 'wave-rush' ? config.duration : 0
-
 	const getPlayerColor = (playerIndex: number) => {
 		const colors = [
 			PlayerColor.RED,
@@ -56,7 +75,8 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 		return colors[playerIndex] || PlayerColor.GRAY
 	}
 
-	const { timeElapsed, resetTimer, timerRef, stopTimer } = useGameTimer(true)
+	const { timeElapsed, resetTimer, timerRef, stopTimer, startTimer } =
+		useGameTimer(true)
 	const { calculateStats } = useTypingStats(wordResults, timeElapsed)
 
 	const resetGameState = useCallback(() => {
@@ -68,12 +88,46 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 
 	// Check if time is up (wave-rush mode)
 	useEffect(() => {
-		if (duration !== 0 && timeElapsed >= duration && timerRef.current) {
+		if (
+			roundDuration &&
+			roundDuration !== 0 &&
+			timeElapsed >= roundDuration &&
+			timerRef.current &&
+			mode === 'wave-rush' &&
+			onRoundComplete &&
+			socket &&
+			socket.id
+		) {
 			const stats = calculateStats()
-			setResults(stats)
-			stopTimer()
+			const id = socket.id
+			onRoundComplete({
+				...stats,
+				playerId: id,
+				timeElapsed,
+			})
+			resetTimer()
+			startTimer()
 		}
-	}, [calculateStats, timeElapsed, duration, timerRef, stopTimer])
+	}, [
+		calculateStats,
+		timeElapsed,
+		roundDuration,
+		timerRef,
+		stopTimer,
+		mode,
+		onRoundComplete,
+		socket,
+		resetTimer,
+		startTimer,
+	])
+
+	useEffect(() => {
+		if (timeElapsed >= 3 && isRoundComplete === true && handleNextRound) {
+			handleNextRound()
+			resetTimer()
+			startTimer()
+		}
+	}, [handleNextRound, isRoundComplete, resetTimer, startTimer, timeElapsed])
 
 	// Check if finished typing all words
 	useEffect(() => {
@@ -118,8 +172,15 @@ const MultiplayerGameContainer = ({ words }: MultiplayerGameContainerProps) => {
 
 	return (
 		<div>
-			{config?.mode === 'wave-rush' && (
-				<CountdownProgress duration={duration} timeElapsed={timeElapsed} />
+			{mode === 'wave-rush' && roundDuration && !isRoundComplete && (
+				<CountdownProgress duration={roundDuration} timeElapsed={timeElapsed} />
+			)}
+
+			{mode === 'wave-rush' && timeBetweenRound && isRoundComplete && (
+				<CountdownProgress
+					duration={timeBetweenRound}
+					timeElapsed={timeElapsed}
+				/>
 			)}
 
 			<div
