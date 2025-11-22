@@ -249,30 +249,30 @@ const MultiplayerGameContainer = ({
 					/>
 				)}
 
-			{mode === 'wave-rush' &&
-				waveRushMode &&
-				(waveRushMode.isRoundComplete || isCompleteEarly) && (
-					<>
-						<CountdownProgress
-							duration={waveRushMode.timeBetweenRound}
-							timeElapsed={transitionTime}
-							isTransition={true}
-						/>
-						{isCompleteEarly && <div>Waiting for others...</div>}
-						<RoundResultCard
-							result={waveRushMode.currentRoundResult ?? null}
-							roundNumber={waveRushMode.currentRound}
-						/>
-					</>
-				)}
+			{mode === 'wave-rush' && waveRushMode?.isRoundComplete && (
+				<>
+					<CountdownProgress
+						duration={waveRushMode.timeBetweenRound}
+						timeElapsed={transitionTime}
+						isTransition={true}
+					/>
+				</>
+			)}
+
+			{mode === 'wave-rush' && isCompleteEarly && !waveRushMode?.isRoundComplete && (
+				<div className='text-center text-green-400 text-lg font-semibold mb-4 animate-pulse'>
+					✓ Round Complete! Waiting for others...
+				</div>
+			)}
 
 			<div
 				ref={containerRef}
 				tabIndex={0}
 				className='text-gray-500 max-w-[1200px] min-w-[400px] flex flex-wrap gap-2 text-2xl sm:text-3xl sm:gap-4 relative overscroll-none transition-opacity duration-300'
 				style={{
-					opacity: waveRushMode?.isRoundComplete || isCompleteEarly ? 0 : 1,
-					pointerEvents: waveRushMode?.isRoundComplete ? 'none' : 'auto',
+					opacity: waveRushMode?.isRoundComplete || isCompleteEarly ? 0.4 : 1,
+					pointerEvents:
+						waveRushMode?.isRoundComplete || isCompleteEarly ? 'none' : 'auto',
 				}}
 			>
 				<Caret
@@ -298,9 +298,18 @@ const MultiplayerGameContainer = ({
 					typed={typed}
 					onKeyDown={onKeyDownMultiplayer}
 					getCharStyle={getCharStyle}
-					isRoundComplete={waveRushMode?.isRoundComplete}
+					isRoundComplete={waveRushMode?.isRoundComplete || isCompleteEarly}
 				/>
 			</div>
+
+			{mode === 'wave-rush' && waveRushMode?.isRoundComplete && (
+				<>
+					<RoundResultCard
+						result={waveRushMode.currentRoundResult ?? null}
+						roundNumber={waveRushMode.currentRound}
+					/>
+				</>
+			)}
 
 			{results && (
 				<GameFinishModalSingle

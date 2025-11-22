@@ -10,6 +10,7 @@ import { SAMPLE_WORDS, WAVE_RUSH_WORDS } from '../../common/constant.ts'
 import type { MultiplayerMode, FieldType } from '../../common/types.ts'
 import LobbySettingsForm from '../../components/GameConfigForm.tsx'
 import WaveRushGameContainer from '../../components/WaveRushGameContainer.tsx'
+import MultiplayerGameContainer from '../../components/MultiplayerGameContainer.tsx'
 
 const Page = () => {
 	const {
@@ -151,15 +152,15 @@ const Page = () => {
 			{roomId && isGameStarted && (
 				<div className='flex flex-col max-w-[1200px] min-w-[400px] justify-center items-center'>
 					{config && config.mode === 'wave-rush' && (
-						<>
-							Wave Rush
-							<WaveRushGameContainer
-								words={WAVE_RUSH_WORDS}
-								roundDuration={config.duration}
-								//numberOfRounds={config.waves}
-								socket={socket}
-							/>
-						</>
+						<WaveRushGameContainer
+							words={WAVE_RUSH_WORDS}
+							roundDuration={config.duration}
+							//numberOfRounds={config.waves}
+							socket={socket}
+						/>
+					)}
+					{config && config.mode === 'type-race' && (
+						<MultiplayerGameContainer words={SAMPLE_WORDS} mode={'type-race'} />
 					)}
 				</div>
 			)}
