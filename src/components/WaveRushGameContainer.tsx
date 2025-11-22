@@ -1,32 +1,22 @@
 // WaveRushGameContainer.tsx
-import { useState } from 'react'
 import MultiplayerGameContainer from './MultiplayerGameContainer.tsx'
 import { useWaveRushGame } from '../hooks/useWaveRushLogic.ts'
 
 interface WaveRushGameContainerProps {
 	words: string[][]
 	roundDuration: number
-	numberOfRounds: number
 }
 
 const WaveRushGameContainer = ({
 	words,
 	roundDuration,
-	numberOfRounds,
 }: WaveRushGameContainerProps) => {
 	const {
-		roundResults,
-		addRoundResult,
-		getLeaderboard,
 		handleRoundComplete,
 		handleNextRound,
-		isLastRound,
 		isRoundComplete,
 		currentWords,
-		// removePlayer,
-		resetGame,
 		currentRound,
-		setIsRoundComplete,
 	} = useWaveRushGame(words)
 
 	return (
@@ -36,12 +26,16 @@ const WaveRushGameContainer = ({
 			</div>
 
 			<MultiplayerGameContainer
+				key={currentRound} // Force remount on round change
 				mode='wave-rush'
 				words={currentWords}
-				onRoundComplete={handleRoundComplete}
-				roundDuration={roundDuration}
-				isRoundComplete={isRoundComplete}
-				handleNextRound={handleNextRound}
+				waveRushMode={{
+					roundDuration,
+					onRoundComplete: handleRoundComplete,
+					timeBetweenRound: 3,
+					isRoundComplete,
+					handleNextRound,
+				}}
 			/>
 
 			{/*{isRoundComplete && !isLastRound && (*/}

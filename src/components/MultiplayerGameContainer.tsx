@@ -1,5 +1,5 @@
 import { Button } from 'antd'
-import React, { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useGameStore } from '../stores/useGameStore.ts'
 import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
@@ -20,27 +20,24 @@ import TypingArea from './TypingArea.tsx'
 
 gsap.registerPlugin(Flip)
 
+interface WaveRushModeProps {
+	roundDuration: number
+	onRoundComplete: (result: WaveRushRoundResultType) => void
+	timeBetweenRound: number
+	isRoundComplete: boolean
+	handleNextRound: () => void
+}
+
 interface MultiplayerGameContainerProps {
 	words: string[]
 	mode: MultiplayerMode
-	roundDuration?: number
-	onRoundComplete?: (result: WaveRushRoundResultType) => void
-	timeBetweenRound?: number
-	isRoundComplete?: boolean
-	setIsRoundComplete?: (
-		value: React.Dispatch<React.SetStateAction<boolean>>
-	) => void
-	handleNextRound?: () => void
+	waveRushMode?: WaveRushModeProps
 }
 
 const MultiplayerGameContainer = ({
 	words,
 	mode,
-	roundDuration,
-	onRoundComplete,
-	timeBetweenRound = 3,
-	isRoundComplete,
-	handleNextRound,
+	waveRushMode,
 }: MultiplayerGameContainerProps) => {
 	const {
 		updateCaret,
@@ -75,70 +72,92 @@ const MultiplayerGameContainer = ({
 		return colors[playerIndex] || PlayerColor.GRAY
 	}
 
-	const { timeElapsed, resetTimer, timerRef, stopTimer, startTimer } =
-		useGameTimer(true)
-	const { calculateStats } = useTypingStats(wordResults, timeElapsed)
+	// Game timer - tracks typing progress
+	const {
+		timeElapsed: gameTime,
+		resetTimer: resetGameTimer,
+		timerRef: gameTimerRef,
+		stopTimer: stopGameTimer,
+	} = useGameTimer(true)
+
+	// Transition timer - tracks between-round countdown
+	const {
+		timeElapsed: transitionTime,
+		resetTimer: resetTransitionTimer,
+		startTimer: startTransitionTimer,
+		stopTimer: stopTransitionTimer,
+	} = useGameTimer(false)
+
+	const { calculateStats } = useTypingStats(wordResults, gameTime)
 
 	const resetGameState = useCallback(() => {
 		resetTypingState()
-		resetTimer()
+		resetGameTimer()
 		setResults(null)
 		resetPlayersCaret()
-	}, [resetTypingState, resetTimer, resetPlayersCaret])
+	}, [resetTypingState, resetGameTimer, resetPlayersCaret])
 
-	// Check if time is up (wave-rush mode)
+	// Check if round time is up (wave-rush mode)
 	useEffect(() => {
 		if (
-			roundDuration &&
-			roundDuration !== 0 &&
-			timeElapsed >= roundDuration &&
-			timerRef.current &&
 			mode === 'wave-rush' &&
-			onRoundComplete &&
-			socket &&
-			socket.id
+			waveRushMode &&
+			!waveRushMode.isRoundComplete &&
+			gameTime >= waveRushMode.roundDuration &&
+			gameTimerRef.current &&
+			socket?.id
 		) {
 			const stats = calculateStats()
-			const id = socket.id
-			onRoundComplete({
+			waveRushMode.onRoundComplete({
 				...stats,
-				playerId: id,
-				timeElapsed,
+				playerId: socket.id,
+				timeElapsed: gameTime,
 			})
-			resetTimer()
-			startTimer()
+			stopGameTimer()
+			startTransitionTimer()
 		}
 	}, [
-		calculateStats,
-		timeElapsed,
-		roundDuration,
-		timerRef,
-		stopTimer,
 		mode,
-		onRoundComplete,
+		waveRushMode,
+		gameTime,
+		gameTimerRef,
 		socket,
-		resetTimer,
-		startTimer,
+		calculateStats,
+		stopGameTimer,
+		startTransitionTimer,
 	])
 
+	// Check if transition countdown is complete
 	useEffect(() => {
-		if (timeElapsed >= 3 && isRoundComplete === true && handleNextRound) {
-			handleNextRound()
-			resetTimer()
-			startTimer()
+		if (
+			mode === 'wave-rush' &&
+			waveRushMode?.isRoundComplete &&
+			transitionTime >= waveRushMode.timeBetweenRound
+		) {
+			waveRushMode.handleNextRound()
+			stopTransitionTimer()
+			resetTransitionTimer()
+			resetGameState()
 		}
-	}, [handleNextRound, isRoundComplete, resetTimer, startTimer, timeElapsed])
+	}, [
+		mode,
+		waveRushMode,
+		transitionTime,
+		stopTransitionTimer,
+		resetTransitionTimer,
+		resetGameState,
+	])
 
 	// Check if finished typing all words
 	useEffect(() => {
 		if (
 			currentWordIdx === words.length - 1 &&
 			caretIdx === words[currentWordIdx].length - 1 &&
-			timerRef.current
+			gameTimerRef.current
 		) {
 			const stats = calculateStats()
 			setResults(stats)
-			stopTimer()
+			stopGameTimer()
 			handlePlayerFinish(roomId, stats)
 		}
 	}, [
@@ -148,8 +167,8 @@ const MultiplayerGameContainer = ({
 		calculateStats,
 		handlePlayerFinish,
 		roomId,
-		timerRef,
-		stopTimer,
+		gameTimerRef,
+		stopGameTimer,
 	])
 
 	// Update caret position to server
@@ -172,14 +191,17 @@ const MultiplayerGameContainer = ({
 
 	return (
 		<div>
-			{mode === 'wave-rush' && roundDuration && !isRoundComplete && (
-				<CountdownProgress duration={roundDuration} timeElapsed={timeElapsed} />
+			{mode === 'wave-rush' && waveRushMode && !waveRushMode.isRoundComplete && (
+				<CountdownProgress
+					duration={waveRushMode.roundDuration}
+					timeElapsed={gameTime}
+				/>
 			)}
 
-			{mode === 'wave-rush' && timeBetweenRound && isRoundComplete && (
+			{mode === 'wave-rush' && waveRushMode?.isRoundComplete && (
 				<CountdownProgress
-					duration={timeBetweenRound}
-					timeElapsed={timeElapsed}
+					duration={waveRushMode.timeBetweenRound}
+					timeElapsed={transitionTime}
 				/>
 			)}
 
