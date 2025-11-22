@@ -6,6 +6,7 @@ interface TypingAreaProps {
 	typed: string
 	onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
 	getCharStyle: (wordIdx: number, charIdx: number, char: string) => string
+	isRoundComplete?: boolean
 }
 
 const TypingArea = ({
@@ -14,6 +15,7 @@ const TypingArea = ({
 	typed,
 	onKeyDown,
 	getCharStyle,
+	isRoundComplete,
 }: TypingAreaProps) => {
 	return (
 		<>
@@ -28,6 +30,7 @@ const TypingArea = ({
 							onKeyDown={e => {
 								onKeyDown(e)
 							}}
+							disabled={isRoundComplete} //prevent input on round complete in Wave Rush mode
 						/>
 					)}
 					{word?.split('').map((char, charIdx) => {

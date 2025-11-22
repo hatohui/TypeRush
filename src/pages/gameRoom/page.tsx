@@ -24,6 +24,7 @@ const Page = () => {
 		startGame,
 		displayFinishModal,
 		setDisplayFinishModal,
+		socket,
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
@@ -155,7 +156,8 @@ const Page = () => {
 							<WaveRushGameContainer
 								words={WAVE_RUSH_WORDS}
 								roundDuration={config.duration}
-								numberOfRounds={config.waves}
+								//numberOfRounds={config.waves}
+								socket={socket}
 							/>
 						</>
 					)}

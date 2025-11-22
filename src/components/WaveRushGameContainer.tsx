@@ -1,15 +1,18 @@
 // WaveRushGameContainer.tsx
 import MultiplayerGameContainer from './MultiplayerGameContainer.tsx'
 import { useWaveRushGame } from '../hooks/useWaveRushLogic.ts'
+import type { Socket } from 'socket.io-client'
 
 interface WaveRushGameContainerProps {
 	words: string[][]
 	roundDuration: number
+	socket: Socket | null
 }
 
 const WaveRushGameContainer = ({
 	words,
 	roundDuration,
+	socket,
 }: WaveRushGameContainerProps) => {
 	const {
 		handleRoundComplete,
@@ -17,6 +20,7 @@ const WaveRushGameContainer = ({
 		isRoundComplete,
 		currentWords,
 		currentRound,
+		getCurrentRoundResult,
 	} = useWaveRushGame(words)
 
 	return (
@@ -26,7 +30,7 @@ const WaveRushGameContainer = ({
 			</div>
 
 			<MultiplayerGameContainer
-				key={currentRound} // Force remount on round change
+				key={currentRound}
 				mode='wave-rush'
 				words={currentWords}
 				waveRushMode={{
@@ -35,22 +39,10 @@ const WaveRushGameContainer = ({
 					timeBetweenRound: 3,
 					isRoundComplete,
 					handleNextRound,
+					currentRoundResult: getCurrentRoundResult(socket?.id),
+					currentRound: currentRound + 1,
 				}}
 			/>
-
-			{/*{isRoundComplete && !isLastRound && (*/}
-			{/*	<RoundCompleteModal*/}
-			{/*		roundScore={roundResults[currentRound]}*/}
-			{/*		onNext={handleNextRound}*/}
-			{/*	/>*/}
-			{/*)}*/}
-
-			{/*{isRoundComplete && isLastRound && (*/}
-			{/*	<GameCompleteModal*/}
-			{/*		allScores={roundResults}*/}
-			{/*		onClose={handleGameComplete}*/}
-			{/*	/>*/}
-			{/*)}*/}
 		</div>
 	)
 }

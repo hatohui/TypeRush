@@ -18,8 +18,6 @@ export const useWaveRushGame = (words: string[][]) => {
 	const currentWords = words[roundResults.currentRound]
 	const isLastRound = roundResults.currentRound === words.length - 1
 
-	console.log(currentWords)
-
 	const addRoundResult = useCallback((result: WaveRushRoundResultType) => {
 		setRoundResults(prev => ({
 			...prev,
@@ -48,12 +46,34 @@ export const useWaveRushGame = (words: string[][]) => {
 		[roundResults.byRound]
 	)
 
-	const handleRoundComplete = useCallback(
-		(result: WaveRushRoundResultType) => {
-			addRoundResult(result)
-			setIsRoundComplete(true)
+	const getCurrentRoundResult = useCallback(
+		(playerId?: string) => {
+			if (!playerId) return null
+			const results = roundResults.byRound[currentRound] || []
+			return results.find(r => r.playerId === playerId) || null
 		},
-		[addRoundResult]
+		[roundResults.byRound, currentRound]
+	)
+
+	const handleRoundComplete = useCallback(
+		(
+			result: WaveRushRoundResultType,
+			playerId?: string,
+			isTimeUp: boolean = false
+		) => {
+			const alreadyHaveResult = getCurrentRoundResult(playerId)
+
+			// Add result only if it's the first submission for this player
+			if (!alreadyHaveResult) {
+				addRoundResult(result)
+			}
+
+			// Set round complete only when time runs out (triggers transition)
+			if (isTimeUp) {
+				setIsRoundComplete(true)
+			}
+		},
+		[addRoundResult, getCurrentRoundResult]
 	)
 
 	const handleNextRound = useCallback(() => {
@@ -98,6 +118,7 @@ export const useWaveRushGame = (words: string[][]) => {
 		setIsRoundComplete,
 		currentWords,
 		currentRound,
+		getCurrentRoundResult,
 		// removePlayer,
 		resetGame,
 	}

@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../stores/useGameStore.ts'
 
-const useGameTimer = (isMultiplayer: boolean) => {
+const useGameTimer = (
+	isMultiplayer: boolean,
+	intervalMs: number = 100 // Default 100ms for precise timing
+) => {
 	const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 	const [startTime, setStartTime] = useState<number | null>(null)
 	const [timeElapsed, setTimeElapsed] = useState<number>(0)
 	const { isGameStarted } = useGameStore()
+
+	const increment = intervalMs / 1000 // Convert ms to seconds
 
 	useEffect(() => {
 		// For practice: wait for startTime to be set (when user types)
@@ -15,8 +20,8 @@ const useGameTimer = (isMultiplayer: boolean) => {
 		if (!shouldStart) return
 
 		timerRef.current = setInterval(() => {
-			setTimeElapsed(prev => Number((prev + 0.1).toFixed(1)))
-		}, 100)
+			setTimeElapsed(prev => Number((prev + increment).toFixed(1)))
+		}, intervalMs)
 
 		return () => {
 			if (timerRef.current) {
@@ -24,7 +29,7 @@ const useGameTimer = (isMultiplayer: boolean) => {
 				timerRef.current = null
 			}
 		}
-	}, [isGameStarted, isMultiplayer, startTime])
+	}, [isGameStarted, isMultiplayer, startTime, intervalMs, increment])
 
 	const stopTimer = () => {
 		if (timerRef.current) {
@@ -36,9 +41,9 @@ const useGameTimer = (isMultiplayer: boolean) => {
 	const startTimer = useCallback(() => {
 		if (timerRef.current) return
 		timerRef.current = setInterval(() => {
-			setTimeElapsed(prev => Number((prev + 0.1).toFixed(1)))
-		}, 100)
-	}, [])
+			setTimeElapsed(prev => Number((prev + increment).toFixed(1)))
+		}, intervalMs)
+	}, [intervalMs, increment])
 
 	const resetTimer = useCallback(() => {
 		stopTimer()
