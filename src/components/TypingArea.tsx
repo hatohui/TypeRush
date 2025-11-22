@@ -18,7 +18,7 @@ const TypingArea = ({
 	isRoundComplete,
 }: TypingAreaProps) => {
 	return (
-		<>
+		<div className='w-full gap-2 text-2xl sm:text-3xl sm:gap-4 flex justify-center items-center'>
 			{localWords?.map((word, wordIdx) => (
 				<span key={wordIdx}>
 					{word === currentWord && (
@@ -48,7 +48,7 @@ const TypingArea = ({
 					})}
 				</span>
 			))}
-		</>
+		</div>
 	)
 }
 

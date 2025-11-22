@@ -17,6 +17,7 @@ import useTypingStats from '../hooks/useTypingStats.ts'
 import useGameTimer from '../hooks/useGameTimer.ts'
 import useTypingLogic from '../hooks/useTypingLogic.ts'
 import useCaretAnimation from '../hooks/useCaretAnimation.ts'
+import { useWaveRushRound } from '../hooks/useWaveRushLogic.ts'
 import TypingArea from './TypingArea.tsx'
 
 gsap.registerPlugin(Flip)
@@ -68,7 +69,6 @@ const MultiplayerGameContainer = ({
 		onKeyDownMultiplayer,
 	} = useTypingLogic(words)
 	const [results, setResults] = useState<null | SingleplayerResultType>(null)
-	const [isCompleteEarly, setIsCompleteEarly] = useState(false)
 
 	const getPlayerColor = (playerIndex: number) => {
 		const colors = [
@@ -105,62 +105,24 @@ const MultiplayerGameContainer = ({
 		resetPlayersCaret()
 	}, [resetTypingState, resetGameTimer, resetPlayersCaret])
 
-	// Check if round time is up (wave-rush mode)
-	useEffect(() => {
-		if (
-			mode === 'wave-rush' &&
-			waveRushMode &&
-			!waveRushMode.isRoundComplete &&
-			gameTime >= waveRushMode.roundDuration &&
-			gameTimerRef.current &&
-			socket?.id
-		) {
-			const stats = calculateStats()
-			waveRushMode.onRoundComplete(
-				{
-					...stats,
-					playerId: socket.id,
-					timeElapsed: gameTime,
-				},
-				socket.id,
-				true // isTimeUp = true
-			)
-			stopGameTimer()
-			startTransitionTimer()
-		}
-	}, [
+	// Wave Rush round management hook
+	const { isCompleteEarly } = useWaveRushRound({
 		mode,
 		waveRushMode,
-		gameTime,
-		gameTimerRef,
+		words,
+		currentWordIdx,
+		caretIdx,
 		socket,
 		calculateStats,
+		gameTime,
+		gameTimerRef,
 		stopGameTimer,
 		startTransitionTimer,
-	])
-
-	// Check if transition countdown is complete
-	// Add 0.5s buffer to ensure "Get Ready!" message shows at 0s before transitioning
-	useEffect(() => {
-		if (
-			mode === 'wave-rush' &&
-			waveRushMode?.isRoundComplete &&
-			transitionTime >= waveRushMode.timeBetweenRound + 0.5
-		) {
-			waveRushMode.handleNextRound()
-			stopTransitionTimer()
-			resetTransitionTimer()
-			resetGameState()
-			setIsCompleteEarly(false)
-		}
-	}, [
-		mode,
-		waveRushMode,
 		transitionTime,
 		stopTransitionTimer,
 		resetTransitionTimer,
 		resetGameState,
-	])
+	})
 
 	// Check if finished typing all words (type-race mode)
 	useEffect(() => {
@@ -184,40 +146,6 @@ const MultiplayerGameContainer = ({
 		roomId,
 		gameTimerRef,
 		stopGameTimer,
-	])
-
-	// Check if finished typing all words early (wave-rush mode)
-	useEffect(() => {
-		if (
-			currentWordIdx === words.length - 1 &&
-			caretIdx === words[currentWordIdx].length - 1 &&
-			gameTimerRef.current &&
-			mode === 'wave-rush' &&
-			waveRushMode &&
-			socket?.id
-		) {
-			const stats = calculateStats()
-			waveRushMode.onRoundComplete(
-				{
-					...stats,
-					playerId: socket.id,
-					timeElapsed: gameTime,
-				},
-				socket.id,
-				false // isTimeUp = false (finished early)
-			)
-			setIsCompleteEarly(true)
-		}
-	}, [
-		calculateStats,
-		caretIdx,
-		currentWordIdx,
-		gameTime,
-		gameTimerRef,
-		mode,
-		socket?.id,
-		waveRushMode,
-		words,
 	])
 
 	// Update caret position to server
@@ -259,16 +187,18 @@ const MultiplayerGameContainer = ({
 				</>
 			)}
 
-			{mode === 'wave-rush' && isCompleteEarly && !waveRushMode?.isRoundComplete && (
-				<div className='text-center text-green-400 text-lg font-semibold mb-4 animate-pulse'>
-					✓ Round Complete! Waiting for others...
-				</div>
-			)}
+			{mode === 'wave-rush' &&
+				isCompleteEarly &&
+				!waveRushMode?.isRoundComplete && (
+					<div className='text-center text-green-400 text-lg font-semibold mb-4 animate-pulse'>
+						✓ Round Complete! Waiting for others...
+					</div>
+				)}
 
 			<div
 				ref={containerRef}
 				tabIndex={0}
-				className='text-gray-500 max-w-[1200px] min-w-[400px] flex flex-wrap gap-2 text-2xl sm:text-3xl sm:gap-4 relative overscroll-none transition-opacity duration-300'
+				className='text-gray-500 max-w-[1200px] min-w-[400px] flex flex-wrap relative overscroll-none transition-opacity duration-300'
 				style={{
 					opacity: waveRushMode?.isRoundComplete || isCompleteEarly ? 0.4 : 1,
 					pointerEvents:

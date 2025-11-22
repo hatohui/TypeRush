@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../../stores/useGameStore.ts'
 import JoinRoomModal from '../../components/JoinRoomModal.tsx'
-import MainGameContainer from '../../components/MainGameContainer.tsx'
 import GameStartModal from '../../components/GameStartModal.tsx'
 import { Button, type FormProps } from 'antd'
 import { PiCrownFill } from 'react-icons/pi'
