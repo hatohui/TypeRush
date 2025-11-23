@@ -25,17 +25,6 @@ export const useWaveRushGame = (words: string[][]) => {
 	const currentWords = words[roundResults.currentRound]
 	const isLastRound = roundResults.currentRound === words.length - 1
 
-	// const getLeaderboard = useCallback(
-	// 	(roundNumber: number) => {
-	// 		const round = roundResults.byRound[roundNumber] || []
-
-	// 		return [...round].sort(
-	// 			(a, b) => b.correct - a.correct || a.timeElapsed - b.timeElapsed
-	// 		)
-	// 	},
-	// 	[roundResults.byRound]
-	// )
-
 	const handleRoundComplete = useCallback(
 		(result: WaveRushRoundResultType, isTimeUp: boolean = false) => {
 			// The `hasSubmittedResult` flag in useWaveRushRound prevents duplicates
@@ -80,7 +69,6 @@ export const useWaveRushGame = (words: string[][]) => {
 	return {
 		roundResults,
 		addRoundResult,
-		//getLeaderboard,
 		handleRoundComplete,
 		handleNextRound,
 		isLastRound,

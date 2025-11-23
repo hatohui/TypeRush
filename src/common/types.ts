@@ -37,7 +37,7 @@ export interface PlayerStats {
 	incorrect: number
 }
 
-export interface RoomLeaderboardEntry {
+export interface TypeRaceGameResultEntry {
 	playerId: string
 	stats: PlayerStats
 }
@@ -46,7 +46,8 @@ export type Room = {
 	roomId: string
 	players: Player[]
 	config: GameConfig
-	leaderboard: RoomLeaderboardEntry[]
+	typeRaceGameResult: TypeRaceGameResultEntry[]
+	waveRushGameResult: WaveRushGameResult
 	gameStartTime: number | null
 }
 
@@ -66,7 +67,7 @@ export interface GameState {
 	isGameStarted: boolean
 	renderStartModal: boolean
 	isHost: boolean
-	leaderboard: RoomLeaderboardEntry[]
+	typeRaceGameResult: TypeRaceGameResultEntry[]
 	position: number | null
 	displayFinishModal: boolean
 	selectedDuration: number

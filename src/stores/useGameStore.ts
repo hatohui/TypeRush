@@ -23,7 +23,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 	isGameStarted: false,
 	renderStartModal: false,
 	isHost: false,
-	leaderboard: [],
+	typeRaceGameResult: [],
 	position: null,
 	displayFinishModal: false,
 	selectedDuration: 15,
@@ -70,17 +70,21 @@ export const useGameStore = create<GameState>((set, get) => ({
 			set({ players })
 		})
 
-		socket.on('leaderboardUpdated', (playerId: string, stats: PlayerStats) => {
-			const newLeaderboard = get().leaderboard
-			newLeaderboard.push({ playerId, stats })
-			console.log(newLeaderboard)
-			if (playerId === get().socket?.id) {
-				const position = newLeaderboard.findIndex(e => e.playerId === playerId)
-				set({ leaderboard: newLeaderboard, position: position })
-			} else {
-				set({ leaderboard: newLeaderboard })
+		socket.on(
+			'typeRaceGameResultUpdated',
+			(playerId: string, stats: PlayerStats) => {
+				const newTypeRaceGameResult = get().typeRaceGameResult
+				newTypeRaceGameResult.push({ playerId, stats })
+				if (playerId === get().socket?.id) {
+					const position = newTypeRaceGameResult.findIndex(
+						e => e.playerId === playerId
+					)
+					set({ typeRaceGameResult: newTypeRaceGameResult, position: position })
+				} else {
+					set({ typeRaceGameResult: newTypeRaceGameResult })
+				}
 			}
-		})
+		)
 
 		socket.on('gameFinished', () => {
 			set({ displayFinishModal: true, isGameStarted: false })
@@ -114,7 +118,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 		})
 
 		socket.on('gameStarted', () => {
-			set({ renderStartModal: true, leaderboard: [] })
+			set({ renderStartModal: true, typeRaceGameResult: [] })
 		})
 
 		socket.on('gameStopped', () => {

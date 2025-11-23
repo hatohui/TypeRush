@@ -11,7 +11,7 @@ const GameFinishModal = ({
 	displayFinishModal,
 	setDisplayFinishModal,
 }: GameFinishModalProps) => {
-	const { leaderboard, players } = useGameStore()
+	const { typeRaceGameResult, players } = useGameStore()
 	let positionColor = PlayerColor.GRAY
 
 	const getPositionStyle = (position: number) => {
@@ -43,8 +43,8 @@ const GameFinishModal = ({
 			title='Results'
 			footer={null}
 		>
-			{leaderboard &&
-				leaderboard.map((entry, idx) => {
+			{typeRaceGameResult &&
+				typeRaceGameResult.map((entry, idx) => {
 					const player = players.find(player => player.id === entry.playerId)
 					console.log(player?.playerName)
 					return (
