@@ -58,7 +58,7 @@ const WaveRushResults: React.FC<WaveRushResultsProps> = ({
 						return (
 							<div
 								key={round}
-								className='border border-gray-600 rounded-lg p-4'
+								className='border border-gray-600 p-4'
 							>
 								<h3 className='text-xl font-semibold mb-4'>
 									Round {round + 1}

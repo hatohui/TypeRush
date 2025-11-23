@@ -12,14 +12,12 @@ import {
 } from '../common/types.ts'
 import GameFinishModalSingle from './GameFinishModalSingle.tsx'
 import CountdownProgress from './CountdownProgress.tsx'
-import RoundResultCard from './RoundResultCard.tsx'
 import useTypingStats from '../hooks/useTypingStats.ts'
 import useGameTimer from '../hooks/useGameTimer.ts'
 import useTypingLogic from '../hooks/useTypingLogic.ts'
 import useCaretAnimation from '../hooks/useCaretAnimation.ts'
 import { useWaveRushRound } from '../hooks/useWaveRushLogic.ts'
 import TypingArea from './TypingArea.tsx'
-import WaveRushResults from './PlayerWaveRushResult.tsx'
 
 gsap.registerPlugin(Flip)
 
@@ -48,8 +46,6 @@ const MultiplayerGameContainer = ({
 		handlePlayerFinish,
 		position,
 		resetPlayersCaret,
-		getCurrentRoundResult,
-		waveRushGameResult,
 		isTransitioning,
 		config,
 	} = useGameStore()
@@ -190,8 +186,6 @@ const MultiplayerGameContainer = ({
 				</div>
 			)}
 
-			<WaveRushResults results={waveRushGameResult} players={players} />
-
 			<div
 				ref={containerRef}
 				tabIndex={0}
@@ -228,15 +222,6 @@ const MultiplayerGameContainer = ({
 					isRoundComplete={isTransitioning || hasSubmittedResult}
 				/>
 			</div>
-
-			{mode === 'wave-rush' && isTransitioning && waveRushMode && (
-				<>
-					<RoundResultCard
-						result={getCurrentRoundResult() ?? null}
-						roundNumber={waveRushMode?.currentRound}
-					/>
-				</>
-			)}
 
 			{results && (
 				<GameFinishModalSingle

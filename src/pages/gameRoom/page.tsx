@@ -10,6 +10,7 @@ import type { MultiplayerMode, FieldType } from '../../common/types.ts'
 import LobbySettingsForm from '../../components/GameConfigForm.tsx'
 import WaveRushGameContainer from '../../components/WaveRushGameContainer.tsx'
 import MultiplayerGameContainer from '../../components/MultiplayerGameContainer.tsx'
+import WaveRushResults from '../../components/PlayerWaveRushResult.tsx'
 
 const Page = () => {
 	const {
@@ -28,7 +29,7 @@ const Page = () => {
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
-	const { renderStartModal, isHost, stopGame, config, handleConfigChange } =
+	const { renderStartModal, isHost, stopGame, config, handleConfigChange, waveRushGameResult } =
 		useGameStore()
 	const [multiplayerMode, setMultiplayerMode] = useState<MultiplayerMode>(
 		config?.mode ? config.mode : 'type-race'
@@ -89,55 +90,79 @@ const Page = () => {
 				error={error}
 			/>
 
-			<main className='flex gap-5 p-5'>
-				<div className='flex-1 p-6 flex flex-col bg-[#414246] justify-between'>
-					<div>
-						<p>Room id: {roomId}</p>
-						<p className='mb-6'>{players.length}/4</p>
-						<div className='grid grid-cols-2 gap-6'>
-							{players &&
-								players.map(player => (
-									<div
-										key={player.id}
-										className='h-28 bg-gray-200 rounded-xl p-5 text-black'
-									>
-										Player: {player.playerName}
-										{player.isHost && <PiCrownFill className='inline ml-1' />}
-									</div>
-								))}
+			<main className='flex flex-col gap-5 p-5'>
+				<div className='flex w-full gap-5'>
+					<div className='flex-1 p-6 flex flex-col bg-[#414246] justify-between'>
+						<div>
+							<p>Room id: {roomId}</p>
+							<p className='mb-6'>{players.length}/4</p>
+							<div className='grid grid-cols-2 gap-6'>
+								{players &&
+									players.map(player => (
+										<div
+											key={player.id}
+											className='h-28 bg-gray-200 rounded-xl p-5 text-black'
+										>
+											Player: {player.playerName}
+											{player.isHost && <PiCrownFill className='inline ml-1' />}
+										</div>
+									))}
+							</div>
 						</div>
+
+						{isHost && (
+							<div className='flex justify-center mt-8 gap-5'>
+								<Button
+									onClick={() => {
+										startGame(roomId)
+									}}
+									type='primary'
+									disabled={isGameStarted}
+								>
+									START
+								</Button>
+								<Button danger type='primary' onClick={() => stopGame(roomId)}>
+									STOP
+								</Button>
+							</div>
+						)}
 					</div>
 
-					{isHost && (
-						<div className='flex justify-center mt-8 gap-5'>
-							<Button
-								onClick={() => {
-									startGame(roomId)
-								}}
-								type='primary'
-								disabled={isGameStarted}
-							>
-								START
-							</Button>
-							<Button danger type='primary' onClick={() => stopGame(roomId)}>
-								STOP
-							</Button>
-						</div>
-					)}
+					<aside className='w-80 p-6 bg-[#414246]'>
+						<h2 className='text-sm font-semibold'>Lobby Settings</h2>
+						{config && (
+							<LobbySettingsForm
+								config={config}
+								isHost={isHost}
+								multiplayerMode={multiplayerMode}
+								onModeChange={setMultiplayerMode}
+								onSubmit={handleSaveConfig}
+							/>
+						)}
+					</aside>
 				</div>
 
-				<aside className='w-80 p-6 bg-[#414246]'>
-					<h2 className='text-sm font-semibold'>Lobby Settings</h2>
-					{config && (
-						<LobbySettingsForm
-							config={config}
-							isHost={isHost}
-							multiplayerMode={multiplayerMode}
-							onModeChange={setMultiplayerMode}
-							onSubmit={handleSaveConfig}
-						/>
-					)}
-				</aside>
+				{roomId && isGameStarted && (
+					<div className='flex w-full justify-center items-center'>
+						{config && config.mode === 'wave-rush' && (
+							<div className='w-full flex gap-5'>
+								<aside className='w-[30%]'>
+									<WaveRushResults results={waveRushGameResult} players={players} />
+								</aside>
+								<div className='max-w-[1200px] min-w-[400px] flex justify-center'>
+									<WaveRushGameContainer
+										words={WAVE_RUSH_WORDS}
+										roundDuration={config.duration}
+										socket={socket}
+									/>
+								</div>
+							</div>
+						)}
+						{config && config.mode === 'type-race' && (
+							<MultiplayerGameContainer words={SAMPLE_WORDS} mode={'type-race'} />
+						)}
+					</div>
+				)}
 			</main>
 
 			{renderStartModal && <GameStartModal duration={3} />}
@@ -147,22 +172,6 @@ const Page = () => {
 					setDisplayFinishModal={setDisplayFinishModal}
 					displayFinishModal={displayFinishModal}
 				/>
-			)}
-
-			{roomId && isGameStarted && (
-				<div className='flex flex-col max-w-[1200px] min-w-[400px] justify-center items-center'>
-					{config && config.mode === 'wave-rush' && (
-						<WaveRushGameContainer
-							words={WAVE_RUSH_WORDS}
-							roundDuration={config.duration}
-							//numberOfRounds={config.waves}
-							socket={socket}
-						/>
-					)}
-					{config && config.mode === 'type-race' && (
-						<MultiplayerGameContainer words={SAMPLE_WORDS} mode={'type-race'} />
-					)}
-				</div>
 			)}
 		</div>
 	)
