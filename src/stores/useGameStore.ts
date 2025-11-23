@@ -32,6 +32,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 		byRound: {},
 		currentRound: 0,
 	},
+	isTransitioning: false,
 
 	connect: () => {
 		if (get().socket) return
@@ -122,8 +123,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 		})
 
 		socket.on('gameStopped', () => {
-			set({ isGameStarted: false })
 			set({
+				isGameStarted: false,
+				isTransitioning: false,
 				waveRushGameResult: {
 					byPlayer: {},
 					byRound: {},
@@ -137,8 +139,20 @@ export const useGameStore = create<GameState>((set, get) => ({
 			set({ config: config })
 		})
 
-		socket.on('playerFinishedRound', (results: WaveRushRoundResultType) => {
-			get().addRoundResult(results)
+		socket.on('waveRushGameStateUpdated', (gameState: WaveRushGameResult) => {
+			set({ waveRushGameResult: gameState })
+		})
+
+		// ✅ Server tells clients to start transition
+		socket.on('startTransition', () => {
+			console.log('📢 Server: Start transition')
+			set({ isTransitioning: true })
+		})
+
+		// ✅ Server tells clients next round started
+		socket.on('nextRoundStarted', () => {
+			console.log('📢 Server: Next round started')
+			set({ isTransitioning: false })
 		})
 	},
 
@@ -213,15 +227,13 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 	playerFinishRound: (
 		roomId: string | null,
-		results: WaveRushRoundResultType,
-		currentRound: number
+		results: WaveRushRoundResultType
 	) => {
 		const socket = get().socket
 		if (!socket || !roomId) return
 		socket.emit('playerFinishRound', {
 			roomId,
 			results,
-			currentRound,
 		})
 	},
 
@@ -231,51 +243,6 @@ export const useGameStore = create<GameState>((set, get) => ({
 			get().waveRushGameResult.byRound[get().waveRushGameResult.currentRound] ||
 			[]
 		return results.find(r => r.playerId === get().socket?.id) || null
-	},
-
-	addRoundResult: (result: WaveRushRoundResultType) => {
-		set(state => {
-			const game = state.waveRushGameResult
-			const round = game.currentRound
-
-			const existingInRound = game.byRound[round]?.find(
-				r => r.playerId === result.playerId
-			)
-
-			if (existingInRound) {
-				return state
-			}
-
-			return {
-				waveRushGameResult: {
-					...game,
-					byPlayer: {
-						...game.byPlayer,
-						[result.playerId]: [
-							...(game.byPlayer[result.playerId] || []),
-							result,
-						],
-					},
-					byRound: {
-						...game.byRound,
-						[round]: [...(game.byRound[round] || []), result],
-					},
-				},
-			}
-		})
-	},
-
-	toNextWaveRushRound: () => {
-		set(state => ({
-			waveRushGameResult: {
-				...state.waveRushGameResult,
-				currentRound: state.waveRushGameResult.currentRound + 1,
-			},
-		}))
-	},
-
-	setWaveRushGameResult: (waveRushGameResult: WaveRushGameResult) => {
-		set({ waveRushGameResult: waveRushGameResult })
 	},
 
 	resetPlayersCaret: () => {

@@ -26,11 +26,7 @@ gsap.registerPlugin(Flip)
 interface WaveRushModeProps {
 	roundDuration: number
 	onRoundComplete: (result: WaveRushRoundResultType, isTimeUp?: boolean) => void
-	timeBetweenRound: number
-	isRoundComplete: boolean
-	handleNextRound: () => void
 	currentRound: number
-	setIsRoundComplete: (isRoundComplete: boolean) => void
 }
 
 interface MultiplayerGameContainerProps {
@@ -54,6 +50,8 @@ const MultiplayerGameContainer = ({
 		resetPlayersCaret,
 		getCurrentRoundResult,
 		waveRushGameResult,
+		isTransitioning,
+		config,
 	} = useGameStore()
 
 	const {
@@ -92,7 +90,6 @@ const MultiplayerGameContainer = ({
 		timeElapsed: transitionTime,
 		resetTimer: resetTransitionTimer,
 		startTimer: startTransitionTimer,
-		stopTimer: stopTransitionTimer,
 	} = useGameTimer(false, 1000)
 
 	const { calculateStats } = useTypingStats(wordResults, gameTime)
@@ -117,8 +114,6 @@ const MultiplayerGameContainer = ({
 		gameTimerRef,
 		stopGameTimer,
 		startTransitionTimer,
-		transitionTime,
-		stopTransitionTimer,
 		resetTransitionTimer,
 		resetGameState,
 	})
@@ -168,32 +163,32 @@ const MultiplayerGameContainer = ({
 
 	return (
 		<div>
-			{mode === 'wave-rush' &&
-				waveRushMode &&
-				!waveRushMode.isRoundComplete && (
-					<CountdownProgress
-						duration={waveRushMode.roundDuration}
-						timeElapsed={gameTime}
-					/>
-				)}
+			{mode === 'wave-rush' && waveRushMode && !isTransitioning && (
+				<CountdownProgress
+					duration={waveRushMode.roundDuration}
+					timeElapsed={gameTime}
+				/>
+			)}
 
-			{mode === 'wave-rush' && waveRushMode?.isRoundComplete && (
+			{mode === 'wave-rush' && isTransitioning && (
 				<>
 					<CountdownProgress
-						duration={waveRushMode.timeBetweenRound}
+						duration={
+							config?.mode === mode && mode === 'wave-rush'
+								? config.timeBetweenRounds
+								: 3
+						}
 						timeElapsed={transitionTime}
 						isTransition={true}
 					/>
 				</>
 			)}
 
-			{mode === 'wave-rush' &&
-				hasSubmittedResult &&
-				!waveRushMode?.isRoundComplete && (
-					<div className='text-center text-green-400 text-lg font-semibold mb-4 animate-pulse'>
-						✓ Round Complete! Waiting for others...
-					</div>
-				)}
+			{mode === 'wave-rush' && hasSubmittedResult && !isTransitioning && (
+				<div className='text-center text-green-400 text-lg font-semibold mb-4 animate-pulse'>
+					✓ Round Complete! Waiting for others...
+				</div>
+			)}
 
 			<WaveRushResults results={waveRushGameResult} players={players} />
 
@@ -202,12 +197,9 @@ const MultiplayerGameContainer = ({
 				tabIndex={0}
 				className='text-gray-500 max-w-[1200px] min-w-[400px] flex flex-wrap relative overscroll-none transition-opacity duration-300'
 				style={{
-					opacity:
-						waveRushMode?.isRoundComplete || hasSubmittedResult ? 0.4 : 1,
+					opacity: isTransitioning || hasSubmittedResult ? 0.4 : 1,
 					pointerEvents:
-						waveRushMode?.isRoundComplete || hasSubmittedResult
-							? 'none'
-							: 'auto',
+						isTransitioning || hasSubmittedResult ? 'none' : 'auto',
 				}}
 			>
 				<Caret
@@ -233,15 +225,15 @@ const MultiplayerGameContainer = ({
 					typed={typed}
 					onKeyDown={onKeyDownMultiplayer}
 					getCharStyle={getCharStyle}
-					isRoundComplete={waveRushMode?.isRoundComplete || hasSubmittedResult}
+					isRoundComplete={isTransitioning || hasSubmittedResult}
 				/>
 			</div>
 
-			{mode === 'wave-rush' && waveRushMode?.isRoundComplete && (
+			{mode === 'wave-rush' && isTransitioning && waveRushMode && (
 				<>
 					<RoundResultCard
 						result={getCurrentRoundResult() ?? null}
-						roundNumber={waveRushMode.currentRound}
+						roundNumber={waveRushMode?.currentRound}
 					/>
 				</>
 			)}

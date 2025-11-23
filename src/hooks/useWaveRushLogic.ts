@@ -1,83 +1,31 @@
 import { useState, useCallback, useEffect } from 'react'
-import type {
-	WaveRushGameResult,
-	WaveRushRoundResultType,
-} from '../common/types.ts'
+import type { WaveRushRoundResultType } from '../common/types.ts'
 import { useGameStore } from '../stores/useGameStore.ts'
-
-const initialGameState: WaveRushGameResult = {
-	byPlayer: {},
-	byRound: {},
-	currentRound: 0,
-}
 
 export const useWaveRushGame = (words: string[][]) => {
 	const {
 		waveRushGameResult: roundResults,
-		setWaveRushGameResult: setRoundResults,
-		addRoundResult,
-		toNextWaveRushRound,
 		playerFinishRound,
 		roomId,
 	} = useGameStore()
-	const [isRoundComplete, setIsRoundComplete] = useState(false)
 	const currentRound = roundResults.currentRound
 	const currentWords = words[roundResults.currentRound]
 	const isLastRound = roundResults.currentRound === words.length - 1
 
 	const handleRoundComplete = useCallback(
-		(result: WaveRushRoundResultType, isTimeUp: boolean = false) => {
+		(result: WaveRushRoundResultType) => {
 			// The `hasSubmittedResult` flag in useWaveRushRound prevents duplicates
-			playerFinishRound(roomId, result, currentRound)
-
-			// Only trigger transition when time is up
-			if (isTimeUp) {
-				setIsRoundComplete(true)
-			}
+			playerFinishRound(roomId, result)
 		},
-		[currentRound, playerFinishRound, roomId]
+		[playerFinishRound, roomId]
 	)
-
-	const handleNextRound = useCallback(() => {
-		toNextWaveRushRound()
-		setIsRoundComplete(false)
-	}, [toNextWaveRushRound])
-
-	// const removePlayer = useCallback((socketId: string) => {
-	// 	setRoundResults(prev => {
-	// 		const { [socketId]: removed, ...restPlayers } = prev.byPlayer
-	//
-	// 		const newByRound: typeof prev.byRound = {}
-	// 		for (const round in prev.byRound) {
-	// 			newByRound[round] = prev.byRound[round].filter(
-	// 				r => r.socketId !== socketId
-	// 			)
-	// 		}
-	//
-	// 		return {
-	// 			...prev,
-	// 			byPlayer: restPlayers,
-	// 			byRound: newByRound,
-	// 		}
-	// 	})
-	// }, [])
-
-	const resetGame = useCallback(() => {
-		setRoundResults(initialGameState)
-	}, [])
 
 	return {
 		roundResults,
-		addRoundResult,
 		handleRoundComplete,
-		handleNextRound,
 		isLastRound,
-		isRoundComplete,
-		setIsRoundComplete,
 		currentWords,
 		currentRound,
-		// removePlayer,
-		resetGame,
 	}
 }
 
@@ -94,22 +42,13 @@ export const useWaveRushRound = ({
 	gameTimerRef,
 	stopGameTimer,
 	startTransitionTimer,
-	transitionTime,
-	stopTransitionTimer,
 	resetTransitionTimer,
 	resetGameState,
 }: {
 	mode: string
 	waveRushMode?: {
 		roundDuration: number
-		onRoundComplete: (
-			result: WaveRushRoundResultType,
-			isTimeUp?: boolean
-		) => void
-		timeBetweenRound: number
-		isRoundComplete: boolean
-		handleNextRound: () => void
-		setIsRoundComplete: (isRoundComplete: boolean) => void
+		onRoundComplete: (result: WaveRushRoundResultType) => void
 	}
 	words: string[]
 	currentWordIdx: number
@@ -126,30 +65,24 @@ export const useWaveRushRound = ({
 	gameTimerRef: React.MutableRefObject<ReturnType<typeof setInterval> | null>
 	stopGameTimer: () => void
 	startTransitionTimer: () => void
-	transitionTime: number
-	stopTransitionTimer: () => void
 	resetTransitionTimer: () => void
 	resetGameState: () => void
 }) => {
 	const [hasSubmittedResult, setHasSubmittedResult] = useState(false)
+	const [isFinishedEarly, setIsFinishedEarly] = useState(false)
+	const { isTransitioning } = useGameStore()
 
-	const submitRoundResult = useCallback(
-		(isTimeUp: boolean) => {
-			if (!socket?.id || hasSubmittedResult) return
+	const submitRoundResult = useCallback(() => {
+		if (!socket?.id || hasSubmittedResult) return
 
-			const stats = calculateStats()
-			waveRushMode?.onRoundComplete(
-				{
-					...stats,
-					playerId: socket.id,
-					timeElapsed: gameTime,
-				},
-				isTimeUp
-			)
-			setHasSubmittedResult(true)
-		},
-		[socket?.id, hasSubmittedResult, calculateStats, waveRushMode, gameTime]
-	)
+		const stats = calculateStats()
+		waveRushMode?.onRoundComplete({
+			...stats,
+			playerId: socket.id,
+			timeElapsed: gameTime,
+		})
+		setHasSubmittedResult(true)
+	}, [socket?.id, hasSubmittedResult, calculateStats, waveRushMode, gameTime])
 
 	// Check if finished typing all words early
 	useEffect(() => {
@@ -166,7 +99,8 @@ export const useWaveRushRound = ({
 			caretIdx === words[currentWordIdx].length - 1
 
 		if (isFinishedTyping) {
-			submitRoundResult(false)
+			setIsFinishedEarly(true)
+			submitRoundResult()
 		}
 	}, [
 		mode,
@@ -184,7 +118,7 @@ export const useWaveRushRound = ({
 		if (
 			mode !== 'wave-rush' ||
 			!waveRushMode ||
-			waveRushMode.isRoundComplete ||
+			isTransitioning ||
 			!gameTimerRef.current
 		) {
 			return
@@ -193,15 +127,11 @@ export const useWaveRushRound = ({
 		if (gameTime >= waveRushMode.roundDuration) {
 			// Submit result if not already submitted
 			if (!hasSubmittedResult) {
-				submitRoundResult(true)
+				submitRoundResult()
 			}
-
 			stopGameTimer()
-			startTransitionTimer()
-
-			if (!waveRushMode.isRoundComplete) {
-				waveRushMode.setIsRoundComplete(true)
-			}
+			setIsFinishedEarly(false)
+			//startTransitionTimer()
 		}
 	}, [
 		mode,
@@ -211,33 +141,39 @@ export const useWaveRushRound = ({
 		hasSubmittedResult,
 		submitRoundResult,
 		stopGameTimer,
-		startTransitionTimer,
-		waveRushMode?.isRoundComplete,
+		//startTransitionTimer,
+		isTransitioning,
 		socket?.id,
 	])
 
 	useEffect(() => {
+		if (mode === 'wave-rush' && isTransitioning) {
+			startTransitionTimer()
+		}
+	}, [mode, isTransitioning, startTransitionTimer])
+
+	useEffect(() => {
 		if (
 			mode === 'wave-rush' &&
-			waveRushMode?.isRoundComplete &&
-			transitionTime >= waveRushMode.timeBetweenRound + 0.5
+			!isTransitioning &&
+			hasSubmittedResult &&
+			!isFinishedEarly
 		) {
-			waveRushMode.handleNextRound()
-			stopTransitionTimer()
 			resetTransitionTimer()
 			resetGameState()
 			setHasSubmittedResult(false)
 		}
 	}, [
+		hasSubmittedResult,
+		isFinishedEarly,
+		isTransitioning,
 		mode,
-		waveRushMode,
-		transitionTime,
-		stopTransitionTimer,
-		resetTransitionTimer,
 		resetGameState,
+		resetTransitionTimer,
 	])
 
 	return {
 		hasSubmittedResult,
+		isFinishedEarly,
 	}
 }

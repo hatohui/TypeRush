@@ -13,14 +13,8 @@ const WaveRushGameContainer = ({
 	words,
 	roundDuration,
 }: WaveRushGameContainerProps) => {
-	const {
-		handleRoundComplete,
-		handleNextRound,
-		isRoundComplete,
-		currentWords,
-		currentRound,
-		setIsRoundComplete,
-	} = useWaveRushGame(words)
+	const { handleRoundComplete, currentWords, currentRound } =
+		useWaveRushGame(words)
 
 	return (
 		<div>
@@ -35,11 +29,7 @@ const WaveRushGameContainer = ({
 				waveRushMode={{
 					roundDuration,
 					onRoundComplete: handleRoundComplete,
-					timeBetweenRound: 3,
-					isRoundComplete,
-					handleNextRound,
 					currentRound: currentRound + 1,
-					setIsRoundComplete,
 				}}
 			/>
 		</div>

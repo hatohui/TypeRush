@@ -75,6 +75,7 @@ const Page = () => {
 						mode: values.mode,
 						duration: values.roundDuration,
 						waves: values.waves,
+						timeBetweenRounds: values.timeBetweenRounds,
 					}
 		handleConfigChange(config, roomId)
 	}

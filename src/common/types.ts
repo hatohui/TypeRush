@@ -27,6 +27,7 @@ export type GameConfig =
 			mode: 'wave-rush'
 			duration: number
 			waves: number
+			timeBetweenRounds: number
 	  }
 
 export interface PlayerStats {
@@ -72,6 +73,7 @@ export interface GameState {
 	displayFinishModal: boolean
 	selectedDuration: number
 	waveRushGameResult: WaveRushGameResult
+	isTransitioning: boolean
 
 	connect: () => void
 	setSelectedDuration: (duration: number) => void
@@ -88,12 +90,8 @@ export interface GameState {
 	handleConfigChange: (config: GameConfig, roomId: string | null) => void
 	playerFinishRound: (
 		roomId: string | null,
-		results: WaveRushRoundResultType,
-		currentRound: number
+		results: WaveRushRoundResultType
 	) => void
-	addRoundResult: (result: WaveRushRoundResultType) => void
-	setWaveRushGameResult: (result: WaveRushGameResult) => void
-	toNextWaveRushRound: () => void
 	getCurrentRoundResult: () => WaveRushRoundResultType | null
 }
 
@@ -215,6 +213,7 @@ export type FieldType = {
 	mode: MultiplayerMode
 	roundDuration: number
 	waves: number
+	timeBetweenRounds: number
 }
 
 export interface LobbySettingsFormProps {

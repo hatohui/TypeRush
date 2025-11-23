@@ -26,6 +26,8 @@ const LobbySettingsForm: React.FC<LobbySettingsFormProps> = ({
 				mode: config.mode,
 				roundDuration: config.mode === 'wave-rush' ? config.duration : 0,
 				waves: config.mode === 'wave-rush' ? config.waves : 0,
+				timeBetweenRounds:
+					config.mode === 'wave-rush' ? config.timeBetweenRounds : 0,
 			})
 			onModeChange(config.mode)
 		}
@@ -45,6 +47,8 @@ const LobbySettingsForm: React.FC<LobbySettingsFormProps> = ({
 				mode: config.mode,
 				roundDuration: config.mode === 'wave-rush' && config.duration,
 				waves: config.mode === 'wave-rush' && config.waves,
+				timeBetweenRounds:
+					config.mode === 'wave-rush' && config.timeBetweenRounds,
 			}}
 			onValuesChange={changedValues => {
 				if (changedValues.mode) {
@@ -63,6 +67,13 @@ const LobbySettingsForm: React.FC<LobbySettingsFormProps> = ({
 					</Form.Item>
 					<Form.Item label='Number of waves:' name='waves' required>
 						<InputNumber min={1} max={5} />
+					</Form.Item>
+					<Form.Item
+						label='Time between rounds:'
+						name='timeBetweenRounds'
+						required
+					>
+						<InputNumber min={0} max={15} />
 					</Form.Item>
 				</>
 			)}
