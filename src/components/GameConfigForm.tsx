@@ -2,6 +2,7 @@ import React from 'react'
 import { Button, Form, type FormProps, InputNumber, Radio } from 'antd'
 import { MULTIPLAYER_MODES } from '../common/constant'
 import type { FieldType, LobbySettingsFormProps } from '../common/types'
+import { useGameStore } from '../stores/useGameStore.ts'
 
 const style: React.CSSProperties = {
 	display: 'flex',
@@ -17,6 +18,7 @@ const LobbySettingsForm: React.FC<LobbySettingsFormProps> = ({
 	onSubmit,
 }) => {
 	const [form] = Form.useForm<FieldType>()
+	const { isGameStarted } = useGameStore()
 
 	React.useEffect(() => {
 		if (config) {
@@ -49,7 +51,7 @@ const LobbySettingsForm: React.FC<LobbySettingsFormProps> = ({
 					onModeChange(changedValues.mode)
 				}
 			}}
-			disabled={!isHost}
+			disabled={!isHost || isGameStarted}
 		>
 			<Form.Item label='Game mode:' name='mode' required>
 				<Radio.Group style={style} options={MULTIPLAYER_MODE_OPTIONS} />

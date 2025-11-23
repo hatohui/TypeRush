@@ -147,7 +147,9 @@ const useTypingLogic = (words: string[]) => {
 		}
 
 		if (e.key === InputKey.SPACE) {
-			handleSpacePress()
+			if (caretIdx + 1 >= words[currentWordIdx].length) {
+				handleSpacePress()
+			}
 			e.preventDefault()
 			return
 		}

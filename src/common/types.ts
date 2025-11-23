@@ -47,6 +47,7 @@ export type Room = {
 	players: Player[]
 	config: GameConfig
 	leaderboard: RoomLeaderboardEntry[]
+	gameStartTime: number | null
 }
 
 export interface GameError {
@@ -69,6 +70,7 @@ export interface GameState {
 	position: number | null
 	displayFinishModal: boolean
 	selectedDuration: number
+	waveRushGameResult: WaveRushGameResult
 
 	connect: () => void
 	setSelectedDuration: (duration: number) => void
@@ -83,6 +85,15 @@ export interface GameState {
 	setDisplayFinishModal: (displayFinishModal: boolean) => void
 	resetPlayersCaret: () => void
 	handleConfigChange: (config: GameConfig, roomId: string | null) => void
+	playerFinishRound: (
+		roomId: string | null,
+		results: WaveRushRoundResultType,
+		currentRound: number
+	) => void
+	addRoundResult: (result: WaveRushRoundResultType) => void
+	setWaveRushGameResult: (result: WaveRushGameResult) => void
+	toNextWaveRushRound: () => void
+	getCurrentRoundResult: () => WaveRushRoundResultType | null
 }
 
 export type GameDuration = (typeof GAME_DURATION)[number]

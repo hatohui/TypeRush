@@ -12,7 +12,6 @@ interface WaveRushGameContainerProps {
 const WaveRushGameContainer = ({
 	words,
 	roundDuration,
-	socket,
 }: WaveRushGameContainerProps) => {
 	const {
 		handleRoundComplete,
@@ -20,7 +19,7 @@ const WaveRushGameContainer = ({
 		isRoundComplete,
 		currentWords,
 		currentRound,
-		getCurrentRoundResult,
+		setIsRoundComplete,
 	} = useWaveRushGame(words)
 
 	return (
@@ -39,8 +38,8 @@ const WaveRushGameContainer = ({
 					timeBetweenRound: 3,
 					isRoundComplete,
 					handleNextRound,
-					currentRoundResult: getCurrentRoundResult(socket?.id),
 					currentRound: currentRound + 1,
+					setIsRoundComplete,
 				}}
 			/>
 		</div>

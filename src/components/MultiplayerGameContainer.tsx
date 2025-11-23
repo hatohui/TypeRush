@@ -19,21 +19,18 @@ import useTypingLogic from '../hooks/useTypingLogic.ts'
 import useCaretAnimation from '../hooks/useCaretAnimation.ts'
 import { useWaveRushRound } from '../hooks/useWaveRushLogic.ts'
 import TypingArea from './TypingArea.tsx'
+import WaveRushResults from './PlayerWaveRushResult.tsx'
 
 gsap.registerPlugin(Flip)
 
 interface WaveRushModeProps {
 	roundDuration: number
-	onRoundComplete: (
-		result: WaveRushRoundResultType,
-		playerId?: string,
-		isTimeUp?: boolean
-	) => void
+	onRoundComplete: (result: WaveRushRoundResultType, isTimeUp?: boolean) => void
 	timeBetweenRound: number
 	isRoundComplete: boolean
 	handleNextRound: () => void
-	currentRoundResult?: WaveRushRoundResultType | null
 	currentRound: number
+	setIsRoundComplete: (isRoundComplete: boolean) => void
 }
 
 interface MultiplayerGameContainerProps {
@@ -55,6 +52,8 @@ const MultiplayerGameContainer = ({
 		handlePlayerFinish,
 		position,
 		resetPlayersCaret,
+		getCurrentRoundResult,
+		waveRushGameResult,
 	} = useGameStore()
 
 	const {
@@ -106,7 +105,7 @@ const MultiplayerGameContainer = ({
 	}, [resetTypingState, resetGameTimer, resetPlayersCaret])
 
 	// Wave Rush round management hook
-	const { isCompleteEarly } = useWaveRushRound({
+	const { hasSubmittedResult } = useWaveRushRound({
 		mode,
 		waveRushMode,
 		words,
@@ -146,6 +145,7 @@ const MultiplayerGameContainer = ({
 		roomId,
 		gameTimerRef,
 		stopGameTimer,
+		mode,
 	])
 
 	// Update caret position to server
@@ -188,21 +188,26 @@ const MultiplayerGameContainer = ({
 			)}
 
 			{mode === 'wave-rush' &&
-				isCompleteEarly &&
+				hasSubmittedResult &&
 				!waveRushMode?.isRoundComplete && (
 					<div className='text-center text-green-400 text-lg font-semibold mb-4 animate-pulse'>
 						✓ Round Complete! Waiting for others...
 					</div>
 				)}
 
+			<WaveRushResults results={waveRushGameResult} players={players} />
+
 			<div
 				ref={containerRef}
 				tabIndex={0}
 				className='text-gray-500 max-w-[1200px] min-w-[400px] flex flex-wrap relative overscroll-none transition-opacity duration-300'
 				style={{
-					opacity: waveRushMode?.isRoundComplete || isCompleteEarly ? 0.4 : 1,
+					opacity:
+						waveRushMode?.isRoundComplete || hasSubmittedResult ? 0.4 : 1,
 					pointerEvents:
-						waveRushMode?.isRoundComplete || isCompleteEarly ? 'none' : 'auto',
+						waveRushMode?.isRoundComplete || hasSubmittedResult
+							? 'none'
+							: 'auto',
 				}}
 			>
 				<Caret
@@ -228,14 +233,14 @@ const MultiplayerGameContainer = ({
 					typed={typed}
 					onKeyDown={onKeyDownMultiplayer}
 					getCharStyle={getCharStyle}
-					isRoundComplete={waveRushMode?.isRoundComplete || isCompleteEarly}
+					isRoundComplete={waveRushMode?.isRoundComplete || hasSubmittedResult}
 				/>
 			</div>
 
 			{mode === 'wave-rush' && waveRushMode?.isRoundComplete && (
 				<>
 					<RoundResultCard
-						result={waveRushMode.currentRoundResult ?? null}
+						result={getCurrentRoundResult() ?? null}
 						roundNumber={waveRushMode.currentRound}
 					/>
 				</>

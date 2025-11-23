@@ -8,6 +8,8 @@ import type {
 	GameError,
 	PlayerStats,
 	GameConfig,
+	WaveRushRoundResultType,
+	WaveRushGameResult,
 } from '../common/types.ts'
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -25,6 +27,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 	position: null,
 	displayFinishModal: false,
 	selectedDuration: 15,
+	waveRushGameResult: {
+		byPlayer: {},
+		byRound: {},
+		currentRound: 0,
+	},
 
 	connect: () => {
 		if (get().socket) return
@@ -112,11 +119,22 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 		socket.on('gameStopped', () => {
 			set({ isGameStarted: false })
+			set({
+				waveRushGameResult: {
+					byPlayer: {},
+					byRound: {},
+					currentRound: 0,
+				},
+			})
 			get().resetPlayersCaret()
 		})
 
 		socket.on('configChanged', config => {
 			set({ config: config })
+		})
+
+		socket.on('playerFinishedRound', (results: WaveRushRoundResultType) => {
+			get().addRoundResult(results)
 		})
 	},
 
@@ -187,6 +205,73 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 	setDisplayFinishModal: (displayFinishModal: boolean) => {
 		set({ displayFinishModal: displayFinishModal })
+	},
+
+	playerFinishRound: (
+		roomId: string | null,
+		results: WaveRushRoundResultType,
+		currentRound: number
+	) => {
+		const socket = get().socket
+		if (!socket || !roomId) return
+		socket.emit('playerFinishRound', {
+			roomId,
+			results,
+			currentRound,
+		})
+	},
+
+	getCurrentRoundResult: () => {
+		if (!get().socket) return null
+		const results =
+			get().waveRushGameResult.byRound[get().waveRushGameResult.currentRound] ||
+			[]
+		return results.find(r => r.playerId === get().socket?.id) || null
+	},
+
+	addRoundResult: (result: WaveRushRoundResultType) => {
+		set(state => {
+			const game = state.waveRushGameResult
+			const round = game.currentRound
+
+			const existingInRound = game.byRound[round]?.find(
+				r => r.playerId === result.playerId
+			)
+
+			if (existingInRound) {
+				return state
+			}
+
+			return {
+				waveRushGameResult: {
+					...game,
+					byPlayer: {
+						...game.byPlayer,
+						[result.playerId]: [
+							...(game.byPlayer[result.playerId] || []),
+							result,
+						],
+					},
+					byRound: {
+						...game.byRound,
+						[round]: [...(game.byRound[round] || []), result],
+					},
+				},
+			}
+		})
+	},
+
+	toNextWaveRushRound: () => {
+		set(state => ({
+			waveRushGameResult: {
+				...state.waveRushGameResult,
+				currentRound: state.waveRushGameResult.currentRound + 1,
+			},
+		}))
+	},
+
+	setWaveRushGameResult: (waveRushGameResult: WaveRushGameResult) => {
+		set({ waveRushGameResult: waveRushGameResult })
 	},
 
 	resetPlayersCaret: () => {

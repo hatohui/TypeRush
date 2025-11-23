@@ -3,6 +3,7 @@ import type {
 	WaveRushGameResult,
 	WaveRushRoundResultType,
 } from '../common/types.ts'
+import { useGameStore } from '../stores/useGameStore.ts'
 
 const initialGameState: WaveRushGameResult = {
 	byPlayer: {},
@@ -11,78 +12,47 @@ const initialGameState: WaveRushGameResult = {
 }
 
 export const useWaveRushGame = (words: string[][]) => {
-	const [roundResults, setRoundResults] =
-		useState<WaveRushGameResult>(initialGameState)
+	const {
+		waveRushGameResult: roundResults,
+		setWaveRushGameResult: setRoundResults,
+		addRoundResult,
+		toNextWaveRushRound,
+		playerFinishRound,
+		roomId,
+	} = useGameStore()
 	const [isRoundComplete, setIsRoundComplete] = useState(false)
 	const currentRound = roundResults.currentRound
 	const currentWords = words[roundResults.currentRound]
 	const isLastRound = roundResults.currentRound === words.length - 1
 
-	const addRoundResult = useCallback((result: WaveRushRoundResultType) => {
-		setRoundResults(prev => ({
-			...prev,
-			byPlayer: {
-				...prev.byPlayer,
-				[result.playerId]: [...(prev.byPlayer[result.playerId] || []), result],
-			},
-			byRound: {
-				...prev.byRound,
-				[prev.currentRound]: [
-					...(prev.byRound[prev.currentRound] || []),
-					result,
-				],
-			},
-		}))
-	}, [])
+	// const getLeaderboard = useCallback(
+	// 	(roundNumber: number) => {
+	// 		const round = roundResults.byRound[roundNumber] || []
 
-	const getLeaderboard = useCallback(
-		(roundNumber: number) => {
-			const round = roundResults.byRound[roundNumber] || []
-
-			return [...round].sort(
-				(a, b) => b.correct - a.correct || a.timeElapsed - b.timeElapsed
-			)
-		},
-		[roundResults.byRound]
-	)
-
-	const getCurrentRoundResult = useCallback(
-		(playerId?: string) => {
-			if (!playerId) return null
-			const results = roundResults.byRound[currentRound] || []
-			return results.find(r => r.playerId === playerId) || null
-		},
-		[roundResults.byRound, currentRound]
-	)
+	// 		return [...round].sort(
+	// 			(a, b) => b.correct - a.correct || a.timeElapsed - b.timeElapsed
+	// 		)
+	// 	},
+	// 	[roundResults.byRound]
+	// )
 
 	const handleRoundComplete = useCallback(
-		(
-			result: WaveRushRoundResultType,
-			playerId?: string,
-			isTimeUp: boolean = false
-		) => {
-			const alreadyHaveResult = getCurrentRoundResult(playerId)
+		(result: WaveRushRoundResultType, isTimeUp: boolean = false) => {
+			// The `hasSubmittedResult` flag in useWaveRushRound prevents duplicates
+			playerFinishRound(roomId, result, currentRound)
 
-			// Add result only if it's the first submission for this player
-			if (!alreadyHaveResult) {
-				addRoundResult(result)
-			}
-
-			// Set round complete only when time runs out (triggers transition)
+			// Only trigger transition when time is up
 			if (isTimeUp) {
 				setIsRoundComplete(true)
 			}
 		},
-		[addRoundResult, getCurrentRoundResult]
+		[currentRound, playerFinishRound, roomId]
 	)
 
 	const handleNextRound = useCallback(() => {
-		setRoundResults(prev => ({
-			...prev,
-			currentRound: prev.currentRound + 1,
-		}))
+		toNextWaveRushRound()
 		setIsRoundComplete(false)
-	}, [])
+	}, [toNextWaveRushRound])
 
 	// const removePlayer = useCallback((socketId: string) => {
 	// 	setRoundResults(prev => {
@@ -110,7 +80,7 @@ export const useWaveRushGame = (words: string[][]) => {
 	return {
 		roundResults,
 		addRoundResult,
-		getLeaderboard,
+		//getLeaderboard,
 		handleRoundComplete,
 		handleNextRound,
 		isLastRound,
@@ -118,7 +88,6 @@ export const useWaveRushGame = (words: string[][]) => {
 		setIsRoundComplete,
 		currentWords,
 		currentRound,
-		getCurrentRoundResult,
 		// removePlayer,
 		resetGame,
 	}
@@ -147,12 +116,12 @@ export const useWaveRushRound = ({
 		roundDuration: number
 		onRoundComplete: (
 			result: WaveRushRoundResultType,
-			playerId?: string,
 			isTimeUp?: boolean
 		) => void
 		timeBetweenRound: number
 		isRoundComplete: boolean
 		handleNextRound: () => void
+		setIsRoundComplete: (isRoundComplete: boolean) => void
 	}
 	words: string[]
 	currentWordIdx: number
@@ -174,44 +143,91 @@ export const useWaveRushRound = ({
 	resetTransitionTimer: () => void
 	resetGameState: () => void
 }) => {
-	const [isCompleteEarly, setIsCompleteEarly] = useState(false)
+	const [hasSubmittedResult, setHasSubmittedResult] = useState(false)
 
-	// Check if round time is up
-	useEffect(() => {
-		if (
-			mode === 'wave-rush' &&
-			waveRushMode &&
-			!waveRushMode.isRoundComplete &&
-			gameTime >= waveRushMode.roundDuration &&
-			gameTimerRef.current &&
-			socket?.id
-		) {
+	const submitRoundResult = useCallback(
+		(isTimeUp: boolean) => {
+			if (!socket?.id || hasSubmittedResult) return
+
 			const stats = calculateStats()
-			waveRushMode.onRoundComplete(
+			waveRushMode?.onRoundComplete(
 				{
 					...stats,
 					playerId: socket.id,
 					timeElapsed: gameTime,
 				},
-				socket.id,
-				true // isTimeUp = true
+				isTimeUp
 			)
+			setHasSubmittedResult(true)
+		},
+		[socket?.id, hasSubmittedResult, calculateStats, waveRushMode, gameTime]
+	)
+
+	// Check if finished typing all words early
+	useEffect(() => {
+		if (
+			mode !== 'wave-rush' ||
+			!waveRushMode ||
+			hasSubmittedResult ||
+			!gameTimerRef.current
+		)
+			return
+
+		const isFinishedTyping =
+			currentWordIdx === words.length - 1 &&
+			caretIdx === words[currentWordIdx].length - 1
+
+		if (isFinishedTyping) {
+			submitRoundResult(false)
+		}
+	}, [
+		mode,
+		currentWordIdx,
+		caretIdx,
+		words,
+		hasSubmittedResult,
+		gameTimerRef,
+		submitRoundResult,
+		waveRushMode,
+	])
+
+	// Check if round time is up
+	useEffect(() => {
+		if (
+			mode !== 'wave-rush' ||
+			!waveRushMode ||
+			waveRushMode.isRoundComplete ||
+			!gameTimerRef.current
+		) {
+			return
+		}
+
+		if (gameTime >= waveRushMode.roundDuration) {
+			// Submit result if not already submitted
+			if (!hasSubmittedResult) {
+				submitRoundResult(true)
+			}
+
 			stopGameTimer()
 			startTransitionTimer()
+
+			if (!waveRushMode.isRoundComplete) {
+				waveRushMode.setIsRoundComplete(true)
+			}
 		}
 	}, [
 		mode,
 		waveRushMode,
 		gameTime,
 		gameTimerRef,
-		socket,
-		calculateStats,
+		hasSubmittedResult,
+		submitRoundResult,
 		stopGameTimer,
 		startTransitionTimer,
+		waveRushMode?.isRoundComplete,
+		socket?.id,
 	])
 
-	// Check if transition countdown is complete
-	// Add 0.5s buffer to ensure "Get Ready!" message shows at 0s before transitioning
 	useEffect(() => {
 		if (
 			mode === 'wave-rush' &&
@@ -222,7 +238,7 @@ export const useWaveRushRound = ({
 			stopTransitionTimer()
 			resetTransitionTimer()
 			resetGameState()
-			setIsCompleteEarly(false)
+			setHasSubmittedResult(false)
 		}
 	}, [
 		mode,
@@ -233,43 +249,7 @@ export const useWaveRushRound = ({
 		resetGameState,
 	])
 
-	// Check if finished typing all words early
-	useEffect(() => {
-		if (
-			currentWordIdx === words.length - 1 &&
-			caretIdx === words[currentWordIdx].length - 1 &&
-			gameTimerRef.current &&
-			mode === 'wave-rush' &&
-			waveRushMode &&
-			socket?.id &&
-			!isCompleteEarly
-		) {
-			const stats = calculateStats()
-			waveRushMode.onRoundComplete(
-				{
-					...stats,
-					playerId: socket.id,
-					timeElapsed: gameTime,
-				},
-				socket.id,
-				false // isTimeUp = false (finished early)
-			)
-			setIsCompleteEarly(true)
-		}
-	}, [
-		calculateStats,
-		caretIdx,
-		currentWordIdx,
-		gameTime,
-		gameTimerRef,
-		mode,
-		socket?.id,
-		waveRushMode,
-		words,
-		isCompleteEarly,
-	])
-
 	return {
-		isCompleteEarly,
+		hasSubmittedResult,
 	}
 }
