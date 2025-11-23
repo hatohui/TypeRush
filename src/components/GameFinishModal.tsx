@@ -1,5 +1,6 @@
 import { Card, Modal } from 'antd'
 import { useGameStore } from '../stores/useGameStore.ts'
+import { PlayerColor } from '../common/types.ts'
 
 interface GameFinishModalProps {
 	displayFinishModal: boolean
@@ -10,18 +11,29 @@ const GameFinishModal = ({
 	displayFinishModal,
 	setDisplayFinishModal,
 }: GameFinishModalProps) => {
-	const { leaderboard, players } = useGameStore()
+	const { typeRaceGameResult, players } = useGameStore()
+	let positionColor = PlayerColor.GRAY
 
 	const getPositionStyle = (position: number) => {
-		if (position === 0) {
-			return 'text-3xl font-bold text-amber-300'
-		} else if (position === 1) {
-			return 'text-3xl font-bold text-gray-300'
-		} else if (position === 2) {
-			return 'text-3xl font-bold text-brown-300'
-		} else if (position === 3) {
-			return 'text-3xl font-bold text-red-300'
+		switch (position) {
+			case 0:
+				positionColor = 'text-amber-300'
+				break
+			case 1:
+				positionColor = 'text-gray-300'
+				break
+			case 2:
+				positionColor = 'text-green-300'
+				break
+			case 3:
+				positionColor = 'text-red-300'
+				break
+			default:
+				positionColor = 'text-gray-300'
+				break
 		}
+
+		return `text-3xl font-bold text-[${positionColor}]`
 	}
 
 	return (
@@ -31,8 +43,8 @@ const GameFinishModal = ({
 			title='Results'
 			footer={null}
 		>
-			{leaderboard &&
-				leaderboard.map((entry, idx) => {
+			{typeRaceGameResult &&
+				typeRaceGameResult.map((entry, idx) => {
 					const player = players.find(player => player.id === entry.playerId)
 					console.log(player?.playerName)
 					return (

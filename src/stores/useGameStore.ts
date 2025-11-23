@@ -7,6 +7,9 @@ import type {
 	Room,
 	GameError,
 	PlayerStats,
+	GameConfig,
+	WaveRushRoundResultType,
+	WaveRushGameResult,
 } from '../common/types.ts'
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -20,9 +23,16 @@ export const useGameStore = create<GameState>((set, get) => ({
 	isGameStarted: false,
 	renderStartModal: false,
 	isHost: false,
-	leaderboard: [],
+	typeRaceGameResult: [],
 	position: null,
 	displayFinishModal: false,
+	selectedDuration: 15,
+	waveRushGameResult: {
+		byPlayer: {},
+		byRound: {},
+		currentRound: 0,
+	},
+	isTransitioning: false,
 
 	connect: () => {
 		if (get().socket) return
@@ -61,17 +71,21 @@ export const useGameStore = create<GameState>((set, get) => ({
 			set({ players })
 		})
 
-		socket.on('leaderboardUpdated', (playerId: string, stats: PlayerStats) => {
-			const newLeaderboard = get().leaderboard
-			newLeaderboard.push({ playerId, stats })
-			console.log(newLeaderboard)
-			if (playerId === get().socket?.id) {
-				const position = newLeaderboard.findIndex(e => e.playerId === playerId)
-				set({ leaderboard: newLeaderboard, position: position })
-			} else {
-				set({ leaderboard: newLeaderboard })
+		socket.on(
+			'typeRaceGameResultUpdated',
+			(playerId: string, stats: PlayerStats) => {
+				const newTypeRaceGameResult = get().typeRaceGameResult
+				newTypeRaceGameResult.push({ playerId, stats })
+				if (playerId === get().socket?.id) {
+					const position = newTypeRaceGameResult.findIndex(
+						e => e.playerId === playerId
+					)
+					set({ typeRaceGameResult: newTypeRaceGameResult, position: position })
+				} else {
+					set({ typeRaceGameResult: newTypeRaceGameResult })
+				}
 			}
-		})
+		)
 
 		socket.on('gameFinished', () => {
 			set({ displayFinishModal: true, isGameStarted: false })
@@ -105,16 +119,49 @@ export const useGameStore = create<GameState>((set, get) => ({
 		})
 
 		socket.on('gameStarted', () => {
-			set({ renderStartModal: true, leaderboard: [] })
+			set({ renderStartModal: true, typeRaceGameResult: [] })
 		})
 
 		socket.on('gameStopped', () => {
-			set({ isGameStarted: false })
+			set({
+				isGameStarted: false,
+				isTransitioning: false,
+				waveRushGameResult: {
+					byPlayer: {},
+					byRound: {},
+					currentRound: 0,
+				},
+			})
+			get().resetPlayersCaret()
+		})
+
+		socket.on('configChanged', config => {
+			set({ config: config })
+		})
+
+		socket.on('waveRushGameStateUpdated', (gameState: WaveRushGameResult) => {
+			set({ waveRushGameResult: gameState })
+		})
+
+		// ✅ Server tells clients to start transition
+		socket.on('startTransition', () => {
+			console.log('📢 Server: Start transition')
+			set({ isTransitioning: true })
+		})
+
+		// ✅ Server tells clients next round started
+		socket.on('nextRoundStarted', () => {
+			console.log('📢 Server: Next round started')
+			set({ isTransitioning: false })
 		})
 	},
 
 	createRoom: (playerName: string) => {
 		get().socket?.emit('createRoom', { playerName: playerName })
+	},
+
+	setSelectedDuration: (duration: number) => {
+		set({ selectedDuration: duration })
 	},
 
 	joinRoom: (roomId: string, playerName: string) => {
@@ -156,6 +203,14 @@ export const useGameStore = create<GameState>((set, get) => ({
 		})
 	},
 
+	handleConfigChange: (config: GameConfig, roomId: string | null) => {
+		const socket = get().socket
+		if (!socket || !config || !config.mode || !roomId) {
+			return
+		}
+		socket.emit('configChange', { config, roomId })
+	},
+
 	handlePlayerFinish: (roomId: string | null, stats: PlayerStats) => {
 		const socket = get().socket
 		if (!socket || !roomId) return
@@ -168,5 +223,40 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 	setDisplayFinishModal: (displayFinishModal: boolean) => {
 		set({ displayFinishModal: displayFinishModal })
+	},
+
+	playerFinishRound: (
+		roomId: string | null,
+		results: WaveRushRoundResultType
+	) => {
+		const socket = get().socket
+		if (!socket || !roomId) return
+		socket.emit('playerFinishRound', {
+			roomId,
+			results,
+		})
+	},
+
+	getCurrentRoundResult: () => {
+		if (!get().socket) return null
+		const results =
+			get().waveRushGameResult.byRound[get().waveRushGameResult.currentRound] ||
+			[]
+		return results.find(r => r.playerId === get().socket?.id) || null
+	},
+
+	resetPlayersCaret: () => {
+		set(state => ({
+			players: state.players.map(player => ({
+				...player,
+				progress: {
+					...player.progress,
+					caret: {
+						caretIdx: -1,
+						wordIdx: 0,
+					},
+				},
+			})),
+		}))
 	},
 }))

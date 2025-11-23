@@ -8,7 +8,15 @@ interface CaretProps {
 }
 
 const Caret = forwardRef<HTMLSpanElement, CaretProps>(
-	({ isOpponent = false, playerName = 'Player', color = '#3b82f6', className= '' }, ref) => {
+	(
+		{
+			isOpponent = false,
+			playerName = 'Player',
+			color = '#3b82f6',
+			className = '',
+		},
+		ref
+	) => {
 		return (
 			<span className={`relative inline-block ${className}`} ref={ref}>
 				<span

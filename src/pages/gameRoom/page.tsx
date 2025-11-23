@@ -1,27 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../../stores/useGameStore.ts'
 import JoinRoomModal from '../../components/JoinRoomModal.tsx'
-import MainGameContainer from '../../components/MainGameContainer.tsx'
 import GameStartModal from '../../components/GameStartModal.tsx'
-import { Button } from 'antd'
+import { Button, type FormProps } from 'antd'
 import { PiCrownFill } from 'react-icons/pi'
 import GameFinishModal from '../../components/GameFinishModal.tsx'
-
-const words: string[] = [
-	'umbrella',
-	'night',
-	'ocean',
-	// 'kangaroo',
-	// 'lion',
-	// 'ant',
-	// 'fish',
-	// 'sun',
-	// 'xylophone',
-	// 'train',
-	// 'hat',
-	// 'mountain',
-	// 'village',
-]
+import { SAMPLE_WORDS, WAVE_RUSH_WORDS } from '../../common/constant.ts'
+import type { MultiplayerMode, FieldType } from '../../common/types.ts'
+import LobbySettingsForm from '../../components/GameConfigForm.tsx'
+import WaveRushGameContainer from '../../components/WaveRushGameContainer.tsx'
+import MultiplayerGameContainer from '../../components/MultiplayerGameContainer.tsx'
 
 const Page = () => {
 	const {
@@ -36,10 +24,15 @@ const Page = () => {
 		startGame,
 		displayFinishModal,
 		setDisplayFinishModal,
+		socket,
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
-	const { renderStartModal, isHost, stopGame } = useGameStore()
+	const { renderStartModal, isHost, stopGame, config, handleConfigChange } =
+		useGameStore()
+	const [multiplayerMode, setMultiplayerMode] = useState<MultiplayerMode>(
+		config?.mode ? config.mode : 'type-race'
+	)
 
 	const handleOk = (values: { playerName: string; roomId?: string }) => {
 		setConfirmLoading(true)
@@ -63,6 +56,30 @@ const Page = () => {
 		}
 	}, [connected, error, roomId])
 
+	const handleSaveConfig: FormProps<FieldType>['onFinish'] = values => {
+		const waveRushWords: string[][] = []
+		if (values.mode === 'wave-rush') {
+			for (let i = 0; i < values.waves; i++) {
+				waveRushWords.push(WAVE_RUSH_WORDS[i])
+			}
+		}
+
+		const config =
+			values.mode === 'type-race'
+				? {
+						mode: values.mode,
+						words: ['hello'],
+					}
+				: {
+						words: waveRushWords,
+						mode: values.mode,
+						duration: values.roundDuration,
+						waves: values.waves,
+						timeBetweenRounds: values.timeBetweenRounds,
+					}
+		handleConfigChange(config, roomId)
+	}
+
 	return (
 		<div className='min-h-screen bg-[#383A3E] text-white flex flex-col'>
 			<JoinRoomModal
@@ -71,21 +88,6 @@ const Page = () => {
 				confirmLoading={confirmLoading}
 				error={error}
 			/>
-
-			<header className='bg-gray-800 px-6 py-4 flex justify-between items-center'>
-				<h1 className='text-2xl font-bold text-white'>
-					<span className='text-white'>Type</span>
-					<span className='text-blue-500'>Rush</span>
-				</h1>
-
-				<div className='flex items-center gap-4'>
-					<nav className='flex gap-3'>
-						<button className='bg-gray-700 px-3 py-1 rounded'>stats</button>
-						<button className='bg-gray-700 px-3 py-1 rounded'>settings</button>
-					</nav>
-					<div className='w-5 h-5 rounded-full bg-blue-500' />
-				</div>
-			</header>
 
 			<main className='flex gap-5 p-5'>
 				<div className='flex-1 p-6 flex flex-col bg-[#414246] justify-between'>
@@ -126,6 +128,15 @@ const Page = () => {
 
 				<aside className='w-80 p-6 bg-[#414246]'>
 					<h2 className='text-sm font-semibold'>Lobby Settings</h2>
+					{config && (
+						<LobbySettingsForm
+							config={config}
+							isHost={isHost}
+							multiplayerMode={multiplayerMode}
+							onModeChange={setMultiplayerMode}
+							onSubmit={handleSaveConfig}
+						/>
+					)}
 				</aside>
 			</main>
 
@@ -138,9 +149,19 @@ const Page = () => {
 				/>
 			)}
 
-			{roomId && words && isGameStarted && (
-				<div className='flex justify-center items-center'>
-					<MainGameContainer words={words} mode={'multiplayer'} />
+			{roomId && isGameStarted && (
+				<div className='flex flex-col max-w-[1200px] min-w-[400px] justify-center items-center'>
+					{config && config.mode === 'wave-rush' && (
+						<WaveRushGameContainer
+							words={WAVE_RUSH_WORDS}
+							roundDuration={config.duration}
+							//numberOfRounds={config.waves}
+							socket={socket}
+						/>
+					)}
+					{config && config.mode === 'type-race' && (
+						<MultiplayerGameContainer words={SAMPLE_WORDS} mode={'type-race'} />
+					)}
 				</div>
 			)}
 		</div>

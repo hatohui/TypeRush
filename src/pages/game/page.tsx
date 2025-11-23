@@ -1,23 +1,14 @@
-import MainGameContainer from '../../components/MainGameContainer.tsx'
-
-const words: string[] = [
-	'umbrella',
-	'night',
-	'ocean',
-	'kangaroo',
-	'lion',
-	'ant',
-	'fish',
-	'sun',
-	'xylophone',
-	'train',
-	'hat',
-]
+import PracticeMode from '../../components/PracticeMode.tsx'
 
 const Page = () => {
 	return (
-		<div className='w-screen h-screen flex justify-center items-center'>
-			<MainGameContainer words={words} mode={'practice'} />
+		<div className='flex min-w-outer-container min-h-screen items-center justify-center flex-col gap-10'>
+			<div className='text-center'>
+				{/*<h1 className='sm:block text-8xl hidden font-bold tracking-tight'>*/}
+				{/*	<TypingAnimation text='TypeRush' speed={200} colorSplit={4} />*/}
+				{/*</h1>*/}
+			</div>
+			<PracticeMode />
 		</div>
 	)
 }
