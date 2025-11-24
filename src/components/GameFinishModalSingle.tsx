@@ -3,7 +3,6 @@ import React from 'react'
 import { Modal } from 'antd'
 
 interface GameFinishModalPracticeProps {
-	open: boolean
 	onCancel: () => void
 	footer: React.ReactNode
 	title: string
@@ -31,7 +30,9 @@ const GameFinishModalSingle = ({
 					<p>Incorrect chars: {results.incorrect}</p>
 				</div>
 			)}
-			{isMultiplayer && position && <p>Position: {position + 1}</p>}
+			{isMultiplayer && typeof position === 'number' && (
+				<p>Position: {position + 1}</p>
+			)}
 		</Modal>
 	)
 }

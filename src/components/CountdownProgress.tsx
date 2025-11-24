@@ -10,13 +10,18 @@ const CountdownProgress = ({
 	isTransition?: boolean
 }) => {
 	const remainingTime = Math.max(0, duration - timeElapsed)
-	
+
 	// Display whole seconds (rounded)
 	const displaySeconds = Math.round(remainingTime)
 	const displayTime = `${displaySeconds}s`
 
 	// When display shows 0s, force progress bar to 0%
-	const percent = displaySeconds === 0 ? 0 : duration > 0 ? (remainingTime / duration) * 100 : 0
+	const percent =
+		displaySeconds === 0
+			? 0
+			: duration > 0
+				? (remainingTime / duration) * 100
+				: 0
 
 	const showGetReady = isTransition && displaySeconds === 0
 

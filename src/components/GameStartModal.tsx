@@ -12,8 +12,10 @@ const GameStartModal = ({ duration }: GameStartModalProps) => {
 
 	useEffect(() => {
 		if (localDuration <= 0) {
-			setRenderStartModal(false)
-			setIsGameStarted(true)
+			setTimeout(() => {
+				setRenderStartModal(false)
+				setIsGameStarted(true)
+			}, 500)
 			return
 		}
 
@@ -23,6 +25,10 @@ const GameStartModal = ({ duration }: GameStartModalProps) => {
 
 		return () => clearInterval(countdown)
 	}, [localDuration, setIsGameStarted, setRenderStartModal])
+
+	useEffect(() => {
+		setLocalDuration(duration)
+	}, [duration])
 
 	return (
 		<Modal
