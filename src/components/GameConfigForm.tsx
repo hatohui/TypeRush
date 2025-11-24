@@ -22,14 +22,18 @@ const LobbySettingsForm: React.FC<LobbySettingsFormProps> = ({
 
 	React.useEffect(() => {
 		if (config) {
+			const prevMode = form.getFieldValue('mode')
 			form.setFieldsValue({
 				mode: config.mode,
-				roundDuration: config.mode === 'wave-rush' ? config.duration : 0,
-				waves: config.mode === 'wave-rush' ? config.waves : 0,
+				roundDuration:
+					config.mode === 'wave-rush' ? config.duration : undefined,
+				waves: config.mode === 'wave-rush' ? config.waves : undefined,
 				timeBetweenRounds:
-					config.mode === 'wave-rush' ? config.timeBetweenRounds : 0,
+					config.mode === 'wave-rush' ? config.timeBetweenRounds : undefined,
 			})
-			onModeChange(config.mode)
+			if (prevMode !== config.mode) {
+				onModeChange(config.mode)
+			}
 		}
 	}, [config, form, onModeChange])
 
@@ -45,10 +49,11 @@ const LobbySettingsForm: React.FC<LobbySettingsFormProps> = ({
 			onFinish={handleFinish}
 			initialValues={{
 				mode: config.mode,
-				roundDuration: config.mode === 'wave-rush' ? config.duration : 0,
-				waves: config.mode === 'wave-rush' ? config.waves : 0,
+				roundDuration:
+					config.mode === 'wave-rush' ? config.duration : undefined,
+				waves: config.mode === 'wave-rush' ? config.waves : undefined,
 				timeBetweenRounds:
-					config.mode === 'wave-rush' ? config.timeBetweenRounds : 0,
+					config.mode === 'wave-rush' ? config.timeBetweenRounds : undefined,
 			}}
 			onValuesChange={changedValues => {
 				if (changedValues.mode) {

@@ -1,12 +1,10 @@
 // WaveRushGameContainer.tsx
 import MultiplayerGameContainer from './MultiplayerGameContainer.tsx'
 import { useWaveRushGame } from '../hooks/useWaveRushLogic.ts'
-import type { Socket } from 'socket.io-client'
 
 interface WaveRushGameContainerProps {
 	words: string[][]
 	roundDuration: number
-	socket: Socket | null
 }
 
 const WaveRushGameContainer = ({

@@ -74,8 +74,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 		socket.on(
 			'typeRaceGameResultUpdated',
 			(playerId: string, stats: PlayerStats) => {
-				const newTypeRaceGameResult = get().typeRaceGameResult
-				newTypeRaceGameResult.push({ playerId, stats })
+				const newTypeRaceGameResult = [
+					...get().typeRaceGameResult,
+					{ playerId, stats },
+				]
 				if (playerId === get().socket?.id) {
 					const position = newTypeRaceGameResult.findIndex(
 						e => e.playerId === playerId

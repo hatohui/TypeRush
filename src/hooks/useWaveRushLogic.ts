@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, type RefObject } from 'react'
 import type { WaveRushRoundResultType } from '../common/types.ts'
 import { useGameStore } from '../stores/useGameStore.ts'
 import { buildFinalWordResult } from './useTypingLogic.ts'
@@ -67,7 +67,7 @@ export const useWaveRushRound = ({
 		incorrect: number
 	}
 	gameTime: number
-	gameTimerRef: React.MutableRefObject<ReturnType<typeof setInterval> | null>
+	gameTimerRef: RefObject<ReturnType<typeof setInterval> | null>
 	stopGameTimer: () => void
 	startTransitionTimer: () => void
 	resetTransitionTimer: () => void

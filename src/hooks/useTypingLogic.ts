@@ -110,7 +110,7 @@ const useTypingLogic = (words: string[]) => {
 			}
 
 			if (
-				typed.length > words[currentWordIdx].length + MAX_OVERFLOW &&
+				typed.length >= words[currentWordIdx].length + MAX_OVERFLOW &&
 				e.key !== InputKey.BACKSPACE
 			)
 				return

@@ -151,15 +151,11 @@ const useCaretAnimation = ({
 			if (!socket) return
 			const otherPlayers = players.filter(p => p.id !== socket.id)
 
-			otherPlayers.forEach((player, playerIndex) => {
+			otherPlayers.forEach((_player, playerIndex) => {
 				const caretElement = caretRefs.current[playerIndex]
 				if (!caretElement) {
 					return
 				}
-
-				console.log(
-					`caret of player ${player.playerName} found, caret: ${caretElement}`
-				)
 
 				const target = containerRef.current?.querySelector(
 					`[data-word="0"][data-char="0"]`
@@ -170,7 +166,7 @@ const useCaretAnimation = ({
 				}
 			})
 		})
-	}, [isMultiplayer, caretRefs.current])
+	}, [isMultiplayer])
 
 	return {
 		containerRef,

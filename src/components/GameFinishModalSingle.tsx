@@ -6,7 +6,7 @@ interface GameFinishModalPracticeProps {
 	onCancel: () => void
 	footer: React.ReactNode
 	title: string
-	results: SingleplayerResultType
+	results: SingleplayerResultType | null
 	isMultiplayer: boolean
 	position?: number | null
 }

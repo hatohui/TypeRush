@@ -25,12 +25,15 @@ const Page = () => {
 		startGame,
 		displayFinishModal,
 		setDisplayFinishModal,
-		socket,
+		renderStartModal,
+		isHost,
+		stopGame,
+		config,
+		handleConfigChange,
+		waveRushGameResult,
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
-	const { renderStartModal, isHost, stopGame, config, handleConfigChange, waveRushGameResult } =
-		useGameStore()
 	const [multiplayerMode, setMultiplayerMode] = useState<MultiplayerMode>(
 		config?.mode ? config.mode : 'type-race'
 	)
@@ -147,19 +150,24 @@ const Page = () => {
 						{config && config.mode === 'wave-rush' && (
 							<div className='w-full flex gap-5'>
 								<aside className='w-[30%]'>
-									<WaveRushResults results={waveRushGameResult} players={players} />
+									<WaveRushResults
+										results={waveRushGameResult}
+										players={players}
+									/>
 								</aside>
 								<div className='max-w-[1200px] min-w-[400px] flex justify-center'>
 									<WaveRushGameContainer
 										words={WAVE_RUSH_WORDS}
 										roundDuration={config.duration}
-										socket={socket}
 									/>
 								</div>
 							</div>
 						)}
 						{config && config.mode === 'type-race' && (
-							<MultiplayerGameContainer words={SAMPLE_WORDS} mode={'type-race'} />
+							<MultiplayerGameContainer
+								words={SAMPLE_WORDS}
+								mode={'type-race'}
+							/>
 						)}
 					</div>
 				)}

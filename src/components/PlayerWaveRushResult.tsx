@@ -56,10 +56,7 @@ const WaveRushResults: React.FC<WaveRushResultsProps> = ({
 						const sortedResults = sortByPerformance(roundResults)
 
 						return (
-							<div
-								key={round}
-								className='border border-gray-600 p-4'
-							>
+							<div key={round} className='border border-gray-600 p-4'>
 								<h3 className='text-xl font-semibold mb-4'>
 									Round {round + 1}
 								</h3>
