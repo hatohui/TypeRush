@@ -14,7 +14,9 @@ import GameFinishModalSingle from './GameFinishModalSingle.tsx'
 import CountdownProgress from './CountdownProgress.tsx'
 import useTypingStats from '../hooks/useTypingStats.ts'
 import useGameTimer from '../hooks/useGameTimer.ts'
-import useTypingLogic from '../hooks/useTypingLogic.ts'
+import useTypingLogic, {
+	buildFinalWordResult,
+} from '../hooks/useTypingLogic.ts'
 import useCaretAnimation from '../hooks/useCaretAnimation.ts'
 import { useWaveRushRound } from '../hooks/useWaveRushLogic.ts'
 import TypingArea from './TypingArea.tsx'
@@ -60,6 +62,7 @@ const MultiplayerGameContainer = ({
 		resetTypingState,
 		getCharStyle,
 		onKeyDownMultiplayer,
+		handleSpacePress,
 	} = useTypingLogic(words)
 	const [results, setResults] = useState<null | SingleplayerResultType>(null)
 
@@ -104,6 +107,8 @@ const MultiplayerGameContainer = ({
 		words,
 		currentWordIdx,
 		caretIdx,
+		typed,
+		wordResults,
 		socket,
 		calculateStats,
 		gameTime,
@@ -122,7 +127,21 @@ const MultiplayerGameContainer = ({
 			gameTimerRef.current &&
 			mode === 'type-race'
 		) {
-			const stats = calculateStats()
+			// Build final word result synchronously to include in stats
+			const finalWordResult = buildFinalWordResult(words[currentWordIdx], typed)
+
+			// Create complete wordResults with final word
+			const completeWordResults = {
+				...wordResults,
+				[currentWordIdx]: finalWordResult,
+			}
+
+			// Calculate stats with complete data
+			const stats = calculateStats(completeWordResults)
+
+			// Commit the final word to state for consistency
+			handleSpacePress(true)
+
 			setResults(stats)
 			stopGameTimer()
 			handlePlayerFinish(roomId, stats)
@@ -131,12 +150,15 @@ const MultiplayerGameContainer = ({
 		currentWordIdx,
 		caretIdx,
 		words,
+		typed,
+		wordResults,
 		calculateStats,
 		handlePlayerFinish,
 		roomId,
 		gameTimerRef,
 		stopGameTimer,
 		mode,
+		handleSpacePress,
 	])
 
 	// Update caret position to server
@@ -225,7 +247,6 @@ const MultiplayerGameContainer = ({
 
 			{results && (
 				<GameFinishModalSingle
-					open={position != null}
 					onCancel={resetGameState}
 					footer={[
 						<Button key='close' onClick={resetGameState}>

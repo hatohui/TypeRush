@@ -13,7 +13,7 @@ import GameFinishModalSingle from './GameFinishModalSingle.tsx'
 import CountdownProgress from './CountdownProgress.tsx'
 import useTypingStats from '../hooks/useTypingStats.ts'
 import useGameTimer from '../hooks/useGameTimer.ts'
-import useTypingLogic from '../hooks/useTypingLogic.ts'
+import useTypingLogic, { buildWordResult } from '../hooks/useTypingLogic.ts'
 import useCaretAnimation from '../hooks/useCaretAnimation.ts'
 import TypingArea from './TypingArea.tsx'
 
@@ -60,11 +60,30 @@ const PracticeGameContainer = ({
 	// Check if time is up
 	useEffect(() => {
 		if (duration !== 0 && timeElapsed >= duration && timerRef.current) {
-			const stats = calculateStats()
+			// Build final word result synchronously to include in stats
+			const finalWordResult = buildWordResult(words[currentWordIdx], typed)
+
+			// Create complete wordResults with final word
+			const completeWordResults = {
+				...wordResults,
+				[currentWordIdx]: finalWordResult,
+			}
+
+			const stats = calculateStats(completeWordResults)
 			setResults(stats)
 			stopTimer()
 		}
-	}, [calculateStats, timeElapsed, duration, timerRef, stopTimer])
+	}, [
+		calculateStats,
+		currentWordIdx,
+		duration,
+		stopTimer,
+		timeElapsed,
+		timerRef,
+		typed,
+		wordResults,
+		words,
+	])
 
 	// Check if finished typing all words
 	useEffect(() => {
@@ -73,7 +92,17 @@ const PracticeGameContainer = ({
 			caretIdx === words[currentWordIdx].length - 1 &&
 			timerRef.current
 		) {
-			const stats = calculateStats()
+			// Build final word result synchronously to include in stats
+			const finalWordResult = buildWordResult(words[currentWordIdx], typed)
+
+			// Create complete wordResults with final word
+			const completeWordResults = {
+				...wordResults,
+				[currentWordIdx]: finalWordResult,
+			}
+
+			// Calculate stats with complete data
+			const stats = calculateStats(completeWordResults)
 			setResults(stats)
 			stopTimer()
 		}
@@ -81,6 +110,8 @@ const PracticeGameContainer = ({
 		currentWordIdx,
 		caretIdx,
 		words,
+		typed,
+		wordResults,
 		calculateStats,
 		resetTimer,
 		stopTimer,
@@ -133,7 +164,6 @@ const PracticeGameContainer = ({
 
 			{results && (
 				<GameFinishModalSingle
-					open={!!results}
 					onCancel={resetGameState}
 					footer={[
 						<Button key='close' onClick={resetGameState}>

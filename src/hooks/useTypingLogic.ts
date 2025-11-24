@@ -2,6 +2,36 @@ import React, { useCallback, useState } from 'react'
 import { BlockedKeysSet, CharacterState, InputKey } from '../common/types.ts'
 import { MAX_OVERFLOW } from '../common/constant.ts'
 
+// Utility function to build final word result for stats calculation (multiplayer mode)
+export const buildFinalWordResult = (word: string, typed: string): string[] => {
+	return word.split('').map((char, idx) => {
+		return typed[idx] === char ? 'correct' : 'incorrect'
+	})
+}
+
+// Utility function to build word result with character-by-character evaluation
+// Handles untyped characters and overflow
+export const buildWordResult = (word: string, typed: string): string[] => {
+	const currentResults = word.split('').map((char, idx) => {
+		if (idx < typed.length) {
+			return typed[idx] === char
+				? CharacterState.CORRECT
+				: CharacterState.INCORRECT
+		}
+		return CharacterState.UNTYPED
+	})
+
+	// Handle overflow characters
+	if (typed.length > word.length) {
+		const overflowCount = typed.length - word.length
+		for (let i = 0; i < overflowCount; i++) {
+			currentResults.push(CharacterState.INCORRECT)
+		}
+	}
+
+	return currentResults
+}
+
 const useTypingLogic = (words: string[]) => {
 	const [localWords, setLocalWords] = useState<string[]>(words)
 	const [currentWordIdx, setCurrentWordIdx] = useState(0)
@@ -12,37 +42,25 @@ const useTypingLogic = (words: string[]) => {
 	const [caretIdx, setCaretIdx] = useState(-1)
 	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
 
-	const handleSpacePress = () => {
+	const handleSpacePress = (isFinish: boolean) => {
 		if (typed.trim() === '') return
-		setCaretIdx(-1)
 
-		const currentResults = words[currentWordIdx].split('').map((char, idx) => {
-			if (idx < typed.length) {
-				return typed[idx] === char
-					? CharacterState.CORRECT
-					: CharacterState.INCORRECT
-			}
-			return CharacterState.UNTYPED
-		})
-
-		if (typed.length > words[currentWordIdx].length) {
-			const overflowCount = typed.length - words[currentWordIdx].length
-			for (let i = 0; i < overflowCount; i++) {
-				currentResults.push(CharacterState.INCORRECT)
-			}
-		}
+		const currentResults = buildWordResult(words[currentWordIdx], typed)
 
 		setWordResults(prev => ({
 			...prev,
 			[currentWordIdx]: currentResults,
 		}))
 
-		setCurrentWordIdx(prev => {
-			const nextIdx = prev + 1
-			setCurrentWord(localWords[nextIdx] ?? null)
-			return nextIdx
-		})
-		setTyped('')
+		if (!isFinish) {
+			setCaretIdx(-1)
+			setCurrentWordIdx(prev => {
+				const nextIdx = prev + 1
+				setCurrentWord(localWords[nextIdx] ?? null)
+				return nextIdx
+			})
+			setTyped('')
+		}
 	}
 
 	const resetTypingState = useCallback(() => {
@@ -99,7 +117,7 @@ const useTypingLogic = (words: string[]) => {
 
 			if (e.key === InputKey.SPACE) {
 				e.preventDefault()
-				handleSpacePress()
+				handleSpacePress(false)
 				return
 			}
 
@@ -148,7 +166,7 @@ const useTypingLogic = (words: string[]) => {
 
 		if (e.key === InputKey.SPACE) {
 			if (caretIdx + 1 >= words[currentWordIdx].length) {
-				handleSpacePress()
+				handleSpacePress(false)
 			}
 			e.preventDefault()
 			return

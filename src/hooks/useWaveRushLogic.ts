@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import type { WaveRushRoundResultType } from '../common/types.ts'
 import { useGameStore } from '../stores/useGameStore.ts'
+import { buildFinalWordResult } from './useTypingLogic.ts'
 
 export const useWaveRushGame = (words: string[][]) => {
 	const {
@@ -36,6 +37,8 @@ export const useWaveRushRound = ({
 	words,
 	currentWordIdx,
 	caretIdx,
+	typed,
+	wordResults,
 	socket,
 	calculateStats,
 	gameTime,
@@ -53,8 +56,10 @@ export const useWaveRushRound = ({
 	words: string[]
 	currentWordIdx: number
 	caretIdx: number
+	typed: string
+	wordResults: Record<number, string[]>
 	socket: { id?: string } | null
-	calculateStats: () => {
+	calculateStats: (overrideWordResults?: Record<number, string[]>) => {
 		accuracy: number
 		wpm: number
 		rawWpm: number
@@ -72,17 +77,20 @@ export const useWaveRushRound = ({
 	const [isFinishedEarly, setIsFinishedEarly] = useState(false)
 	const { isTransitioning } = useGameStore()
 
-	const submitRoundResult = useCallback(() => {
-		if (!socket?.id || hasSubmittedResult) return
+	const submitRoundResult = useCallback(
+		(completeWordResults?: Record<number, string[]>) => {
+			if (!socket?.id || hasSubmittedResult) return
 
-		const stats = calculateStats()
-		waveRushMode?.onRoundComplete({
-			...stats,
-			playerId: socket.id,
-			timeElapsed: gameTime,
-		})
-		setHasSubmittedResult(true)
-	}, [socket?.id, hasSubmittedResult, calculateStats, waveRushMode, gameTime])
+			const stats = calculateStats(completeWordResults)
+			waveRushMode?.onRoundComplete({
+				...stats,
+				playerId: socket.id,
+				timeElapsed: gameTime,
+			})
+			setHasSubmittedResult(true)
+		},
+		[socket?.id, hasSubmittedResult, calculateStats, waveRushMode, gameTime]
+	)
 
 	// Check if finished typing all words early
 	useEffect(() => {
@@ -99,14 +107,26 @@ export const useWaveRushRound = ({
 			caretIdx === words[currentWordIdx].length - 1
 
 		if (isFinishedTyping) {
+			// Build final word result synchronously to include in stats
+			const finalWordResult = buildFinalWordResult(words[currentWordIdx], typed)
+
+			// Create complete wordResults with final word
+			const completeWordResults = {
+				...wordResults,
+				[currentWordIdx]: finalWordResult,
+			}
+
+			// Commit the final word to state for consistency
 			setIsFinishedEarly(true)
-			submitRoundResult()
+			submitRoundResult(completeWordResults)
 		}
 	}, [
 		mode,
 		currentWordIdx,
 		caretIdx,
 		words,
+		typed,
+		wordResults,
 		hasSubmittedResult,
 		gameTimerRef,
 		submitRoundResult,
@@ -127,7 +147,17 @@ export const useWaveRushRound = ({
 		if (gameTime >= waveRushMode.roundDuration) {
 			// Submit result if not already submitted
 			if (!hasSubmittedResult) {
-				submitRoundResult()
+				const finalWordResult = buildFinalWordResult(
+					words[currentWordIdx],
+					typed
+				)
+
+				// Create complete wordResults with final word
+				const completeWordResults = {
+					...wordResults,
+					[currentWordIdx]: finalWordResult,
+				}
+				submitRoundResult(completeWordResults)
 			}
 			stopGameTimer()
 			setIsFinishedEarly(false)
@@ -141,9 +171,12 @@ export const useWaveRushRound = ({
 		hasSubmittedResult,
 		submitRoundResult,
 		stopGameTimer,
-		//startTransitionTimer,
 		isTransitioning,
 		socket?.id,
+		words,
+		currentWordIdx,
+		typed,
+		wordResults,
 	])
 
 	useEffect(() => {
@@ -159,8 +192,8 @@ export const useWaveRushRound = ({
 			hasSubmittedResult &&
 			!isFinishedEarly
 		) {
+			console.log('end')
 			resetTransitionTimer()
-			resetGameState()
 			setHasSubmittedResult(false)
 		}
 	}, [
