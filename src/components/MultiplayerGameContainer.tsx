@@ -1,5 +1,5 @@
 import { Button } from 'antd'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useGameStore } from '../stores/useGameStore.ts'
 import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
@@ -20,6 +20,7 @@ import useTypingLogic, {
 import useCaretAnimation from '../hooks/useCaretAnimation.ts'
 import { useWaveRushRound } from '../hooks/useWaveRushLogic.ts'
 import TypingArea from './TypingArea.tsx'
+import throttle from 'lodash.throttle'
 
 gsap.registerPlugin(Flip)
 
@@ -164,13 +165,24 @@ const MultiplayerGameContainer = ({
 		handleSpacePress,
 	])
 
-	// Update caret position to server
+	const throttledUpdateCaret = useMemo(
+		() =>
+			throttle(
+				(caret: { caretIdx: number; wordIdx: number }, room: string) => {
+					updateCaret(caret, room)
+				},
+				500,
+				{ leading: true, trailing: true }
+			),
+		[updateCaret]
+	)
+
+	// Update caret position to server (throttled)
 	useEffect(() => {
-		if (!roomId) return
-		if (caretIdx !== -1 || currentWordIdx !== 0) {
-			updateCaret({ caretIdx, wordIdx: currentWordIdx }, roomId)
-		}
-	}, [caretIdx, currentWordIdx, roomId, updateCaret])
+		if (!roomId || (caretIdx === -1 && currentWordIdx === 0)) return
+
+		throttledUpdateCaret({ caretIdx, wordIdx: currentWordIdx }, roomId)
+	}, [caretIdx, currentWordIdx, roomId, throttledUpdateCaret])
 
 	const { containerRef, caretRefs } = useCaretAnimation({
 		caretIdx,

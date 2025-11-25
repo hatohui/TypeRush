@@ -11,6 +11,7 @@ import type {
 	WaveRushRoundResultType,
 	WaveRushGameResult,
 } from '../common/types.ts'
+import throttle from 'lodash.throttle'
 
 export const useGameStore = create<GameState>((set, get) => ({
 	socket: null,
@@ -93,21 +94,28 @@ export const useGameStore = create<GameState>((set, get) => ({
 			set({ displayFinishModal: true, isGameStarted: false })
 		})
 
-		socket.on('caretUpdated', (payload: { playerId: string; caret: Caret }) => {
-			set(state => ({
-				players: state.players.map(p =>
-					p.id === payload.playerId
-						? {
-								...p,
-								progress: {
-									...p.progress,
-									caret: payload.caret,
-								},
-							}
-						: p
-				),
-			}))
-		})
+		socket.on(
+			'caretUpdated',
+			throttle(
+				(payload: { playerId: string; caret: Caret }) => {
+					set(state => ({
+						players: state.players.map(p =>
+							p.id === payload.playerId
+								? {
+										...p,
+										progress: {
+											...p.progress,
+											caret: payload.caret,
+										},
+									}
+								: p
+						),
+					}))
+				},
+				500,
+				{ leading: true, trailing: true }
+			)
+		)
 
 		socket.on('disconnect', () => {
 			set({
