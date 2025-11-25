@@ -34,7 +34,7 @@ const GameFinishModalMultiplayer = ({
 				break
 		}
 
-		return `text-3xl font-bold text-[${positionColor}]`
+		return `text-3xl font-bold [${positionColor}]`
 	}
 
 	return (
