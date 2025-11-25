@@ -71,8 +71,7 @@ const WaveRushResults: React.FC<WaveRushResultsProps> = ({
 													<th className='text-left py-2 px-3'>Rank</th>
 													<th className='text-left py-2 px-3'>Player</th>
 													<th className='text-right py-2 px-3'>WPM</th>
-													<th className='text-right py-2 px-3'>Accuracy</th>
-													<th className='text-right py-2 px-3'>Correct</th>
+													<th className='text-right py-2 px-3'>Typed</th>
 													<th className='text-right py-2 px-3'>Time</th>
 												</tr>
 											</thead>
@@ -111,9 +110,6 @@ const WaveRushResults: React.FC<WaveRushResultsProps> = ({
 															</td>
 															<td className='py-3 px-3 text-right font-semibold text-blue-400'>
 																{result.wpm.toFixed(1)}
-															</td>
-															<td className='py-3 px-3 text-right'>
-																{result.accuracy.toFixed(1)}%
 															</td>
 															<td className='py-3 px-3 text-right text-green-400'>
 																{result.correct}

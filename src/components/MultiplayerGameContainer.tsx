@@ -93,12 +93,15 @@ const MultiplayerGameContainer = ({
 
 	const { calculateStats } = useTypingStats(wordResults, gameTime)
 
-	const resetGameState = useCallback(() => {
-		resetTypingState()
-		resetGameTimer()
-		setResults(null)
-		resetPlayersCaret()
-	}, [resetTypingState, resetGameTimer, resetPlayersCaret])
+	const resetGameState = useCallback(
+		(isBetweenRounds: boolean) => {
+			resetTypingState()
+			if (!isBetweenRounds) resetGameTimer()
+			setResults(null)
+			resetPlayersCaret()
+		},
+		[resetTypingState, resetGameTimer, resetPlayersCaret]
+	)
 
 	// Wave Rush round management hook
 	const { hasSubmittedResult } = useWaveRushRound({
@@ -249,7 +252,7 @@ const MultiplayerGameContainer = ({
 				<GameFinishModalSingle
 					onCancel={resetGameState}
 					footer={[
-						<Button key='close' onClick={resetGameState}>
+						<Button key='close' onClick={() => resetGameState(false)}>
 							Close
 						</Button>,
 					]}

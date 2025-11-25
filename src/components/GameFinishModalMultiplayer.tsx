@@ -1,17 +1,18 @@
 import { Card, Modal } from 'antd'
 import { useGameStore } from '../stores/useGameStore.ts'
 import { PlayerColor } from '../common/types.ts'
+import WaveRushResults from './PlayerWaveRushResult.tsx'
 
 interface GameFinishModalProps {
 	displayFinishModal: boolean
 	setDisplayFinishModal: (displayFinishModal: boolean) => void
 }
 
-const GameFinishModal = ({
+const GameFinishModalMultiplayer = ({
 	displayFinishModal,
 	setDisplayFinishModal,
 }: GameFinishModalProps) => {
-	const { typeRaceGameResult, players } = useGameStore()
+	const { typeRaceGameResult, waveRushGameResult, players } = useGameStore()
 	let positionColor = PlayerColor.GRAY
 
 	const getPositionStyle = (position: number) => {
@@ -43,10 +44,9 @@ const GameFinishModal = ({
 			title='Results'
 			footer={null}
 		>
-			{typeRaceGameResult &&
+			{typeRaceGameResult && typeRaceGameResult.length > 0 ? (
 				typeRaceGameResult.map((entry, idx) => {
 					const player = players.find(player => player.id === entry.playerId)
-					console.log(player?.playerName)
 					return (
 						<Card key={entry.playerId} className='mb-4'>
 							<div className='flex items-center justify-between'>
@@ -74,9 +74,12 @@ const GameFinishModal = ({
 							</div>
 						</Card>
 					)
-				})}
+				})
+			) : (
+				<WaveRushResults results={waveRushGameResult} players={players} />
+			)}
 		</Modal>
 	)
 }
 
-export default GameFinishModal
+export default GameFinishModalMultiplayer

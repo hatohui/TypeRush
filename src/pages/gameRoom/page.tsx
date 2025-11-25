@@ -4,7 +4,7 @@ import JoinRoomModal from '../../components/JoinRoomModal.tsx'
 import GameStartModal from '../../components/GameStartModal.tsx'
 import { Button, type FormProps } from 'antd'
 import { PiCrownFill } from 'react-icons/pi'
-import GameFinishModal from '../../components/GameFinishModal.tsx'
+import GameFinishModalMultiplayer from '../../components/GameFinishModalMultiplayer.tsx'
 import { SAMPLE_WORDS, WAVE_RUSH_WORDS } from '../../common/constant.ts'
 import type { MultiplayerMode, FieldType } from '../../common/types.ts'
 import LobbySettingsForm from '../../components/GameConfigForm.tsx'
@@ -176,7 +176,7 @@ const Page = () => {
 			{renderStartModal && <GameStartModal duration={3} />}
 
 			{displayFinishModal && (
-				<GameFinishModal
+				<GameFinishModalMultiplayer
 					setDisplayFinishModal={setDisplayFinishModal}
 					displayFinishModal={displayFinishModal}
 				/>

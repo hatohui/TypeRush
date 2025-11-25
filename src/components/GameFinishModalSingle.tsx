@@ -3,7 +3,7 @@ import React from 'react'
 import { Modal } from 'antd'
 
 interface GameFinishModalPracticeProps {
-	onCancel: () => void
+	onCancel: (isBetweenRounds: boolean) => void
 	footer: React.ReactNode
 	title: string
 	results: SingleplayerResultType | null
@@ -20,7 +20,12 @@ const GameFinishModalSingle = ({
 	position,
 }: GameFinishModalPracticeProps) => {
 	return (
-		<Modal open={!!results} onCancel={onCancel} footer={[footer]} title={title}>
+		<Modal
+			open={!!results}
+			onCancel={() => onCancel(false)}
+			footer={[footer]}
+			title={title}
+		>
 			{results && (
 				<div>
 					<p>Accuracy: {results.accuracy.toFixed(1)}%</p>

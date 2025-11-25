@@ -16,9 +16,7 @@ const useGameTimer = (
 		// For practice: wait for startTime to be set (when user types)
 		// For multiplayer: wait for isGameStarted
 		const shouldStart = isMultiplayer ? isGameStarted : startTime !== null
-
 		if (!shouldStart) return
-
 		timerRef.current = setInterval(() => {
 			setTimeElapsed(prev => Number((prev + increment).toFixed(1)))
 		}, intervalMs)
@@ -31,12 +29,13 @@ const useGameTimer = (
 		}
 	}, [isGameStarted, isMultiplayer, startTime, intervalMs, increment])
 
-	const stopTimer = () => {
+	//stop timer, but keep timeElapsed for UI display
+	const stopTimer = useCallback(() => {
 		if (timerRef.current) {
 			clearInterval(timerRef.current)
 			timerRef.current = null
 		}
-	}
+	}, [])
 
 	const startTimer = useCallback(() => {
 		if (timerRef.current) return
@@ -45,11 +44,12 @@ const useGameTimer = (
 		}, intervalMs)
 	}, [intervalMs, increment])
 
+	//stop timer, reset timeElapsed and startTime, use for new round or new game
 	const resetTimer = useCallback(() => {
 		stopTimer()
 		setTimeElapsed(0)
 		setStartTime(null)
-	}, [])
+	}, [stopTimer])
 
 	return {
 		timeElapsed,

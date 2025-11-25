@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, type RefObject } from 'react'
 import type { WaveRushRoundResultType } from '../common/types.ts'
 import { useGameStore } from '../stores/useGameStore.ts'
 import { buildFinalWordResult } from './useTypingLogic.ts'
+import type { Socket } from 'socket.io-client'
 
 export const useWaveRushGame = (words: string[][]) => {
 	const {
@@ -58,7 +59,7 @@ export const useWaveRushRound = ({
 	caretIdx: number
 	typed: string
 	wordResults: Record<number, string[]>
-	socket: { id?: string } | null
+	socket: Socket | null
 	calculateStats: (overrideWordResults?: Record<number, string[]>) => {
 		accuracy: number
 		wpm: number
@@ -71,7 +72,7 @@ export const useWaveRushRound = ({
 	stopGameTimer: () => void
 	startTransitionTimer: () => void
 	resetTransitionTimer: () => void
-	resetGameState: () => void
+	resetGameState: (isBetweenRounds: boolean) => void
 }) => {
 	const [hasSubmittedResult, setHasSubmittedResult] = useState(false)
 	const [isFinishedEarly, setIsFinishedEarly] = useState(false)
@@ -116,7 +117,6 @@ export const useWaveRushRound = ({
 				[currentWordIdx]: finalWordResult,
 			}
 
-			// Commit the final word to state for consistency
 			setIsFinishedEarly(true)
 			submitRoundResult(completeWordResults)
 		}
@@ -180,30 +180,26 @@ export const useWaveRushRound = ({
 	])
 
 	useEffect(() => {
-		if (mode === 'wave-rush' && isTransitioning) {
+		if (!socket) return
+
+		const handleStartTransition = () => {
 			startTransitionTimer()
 		}
-	}, [mode, isTransitioning, startTransitionTimer])
 
-	useEffect(() => {
-		if (
-			mode === 'wave-rush' &&
-			!isTransitioning &&
-			hasSubmittedResult &&
-			!isFinishedEarly
-		) {
-			console.log('end')
+		const handleNextRound = () => {
 			resetTransitionTimer()
+			resetGameState(true)
 			setHasSubmittedResult(false)
 		}
-	}, [
-		hasSubmittedResult,
-		isFinishedEarly,
-		isTransitioning,
-		mode,
-		resetGameState,
-		resetTransitionTimer,
-	])
+
+		socket.on('startTransition', handleStartTransition)
+		socket.on('nextRoundStarted', handleNextRound)
+
+		return () => {
+			socket.off('startTransition', handleStartTransition)
+			socket.off('nextRoundStarted', handleNextRound)
+		}
+	}, [socket, startTransitionTimer, resetTransitionTimer, resetGameState])
 
 	return {
 		hasSubmittedResult,

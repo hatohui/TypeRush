@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 
 interface TypingAreaProps {
 	localWords: string[]
@@ -17,6 +17,14 @@ const TypingArea = ({
 	getCharStyle,
 	isRoundComplete,
 }: TypingAreaProps) => {
+	const inputRef = useRef<HTMLInputElement>(null)
+
+	useEffect(() => {
+		if (!isRoundComplete) {
+			setTimeout(() => inputRef.current?.focus(), 0)
+		}
+	}, [isRoundComplete, currentWord])
+
 	return (
 		<div className='w-full gap-2 text-2xl sm:text-3xl sm:gap-4 flex justify-center items-center'>
 			{localWords?.map((word, wordIdx) => (
@@ -25,6 +33,7 @@ const TypingArea = ({
 						<input
 							className='text-3xl opacity-0 absolute flex focus:outline-none focus:ring-0 focus:border-transparent'
 							autoFocus
+							ref={inputRef}
 							type='text'
 							value={typed}
 							onKeyDown={e => {

@@ -121,13 +121,24 @@ export const useGameStore = create<GameState>((set, get) => ({
 		})
 
 		socket.on('gameStarted', () => {
-			set({ renderStartModal: true, typeRaceGameResult: [] })
+			get().resetPlayersCaret()
+			set({
+				isTransitioning: false,
+				renderStartModal: true,
+				typeRaceGameResult: [],
+				waveRushGameResult: {
+					byPlayer: {},
+					byRound: {},
+					currentRound: 0,
+				},
+			})
 		})
 
 		socket.on('gameStopped', () => {
 			set({
 				isGameStarted: false,
 				isTransitioning: false,
+				typeRaceGameResult: [],
 				waveRushGameResult: {
 					byPlayer: {},
 					byRound: {},
