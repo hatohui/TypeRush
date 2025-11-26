@@ -52,6 +52,25 @@ const LeaderboardPage: React.FC = () => {
 			totalEntries: 30,
 		}
 
+		setTimeout(() => {
+			// Filter entries by selected mode and sort by WPM (desc) then date (asc)
+			const filteredEntries = allMockData.entries
+				.filter(entry => entry.mode === mode)
+				.sort((a, b) => {
+					// Primary sort: WPM descending (higher is better)
+					if (b.wpm !== a.wpm) {
+						return b.wpm - a.wpm
+					}
+					// Tiebreaker: Earlier date wins (older date = higher rank)
+					return a.recordedAt.getTime() - b.recordedAt.getTime()
+				})
+
+			setLeaderboardData({
+				entries: filteredEntries,
+				totalEntries: filteredEntries.length,
+			})
+			setLoading(false)
+		}, 500)
 	}, [type, mode])
 
 	if (loading) {
