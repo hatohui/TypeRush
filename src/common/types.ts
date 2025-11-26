@@ -60,3 +60,8 @@ export interface LeaderboardEntry {
 	mode: number
 	recordedAt: Date
 }
+
+export interface LeaderboardData {
+	entries: LeaderboardEntry[]
+	totalEntries: number
+}
