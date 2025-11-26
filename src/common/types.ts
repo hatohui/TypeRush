@@ -48,3 +48,15 @@ export interface MainGameContainerProps {
 	words: string[]
 	mode: 'practice' | 'multiplayer'
 }
+
+export interface LeaderboardEntry {
+	user: {
+		id: string
+		playerName: string
+	}
+	accuracy: number
+	wpm: number
+	rawWpm: number
+	mode: number
+	recordedAt: Date
+}
