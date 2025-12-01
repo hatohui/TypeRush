@@ -74,6 +74,7 @@ export interface GameState {
 	selectedDuration: number
 	waveRushGameResult: WaveRushGameResult
 	isTransitioning: boolean
+	shouldHideUI: boolean
 
 	connect: () => void
 	setSelectedDuration: (duration: number) => void
@@ -93,6 +94,7 @@ export interface GameState {
 		results: WaveRushRoundResultType
 	) => void
 	getCurrentRoundResult: () => WaveRushRoundResultType | null
+	setShouldHideUI: (value: boolean) => void
 }
 
 export type GameDuration = (typeof GAME_DURATION)[number]

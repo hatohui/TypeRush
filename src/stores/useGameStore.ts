@@ -34,6 +34,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 		currentRound: 0,
 	},
 	isTransitioning: false,
+	shouldHideUI: false,
 
 	connect: () => {
 		if (get().socket) return
@@ -279,5 +280,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 				},
 			})),
 		}))
+	},
+
+	setShouldHideUI: (value: boolean) => {
+		set({ shouldHideUI: value })
 	},
 }))

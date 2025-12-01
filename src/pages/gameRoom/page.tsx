@@ -93,9 +93,11 @@ const Page = () => {
 				error={error}
 			/>
 
-			<main className='flex flex-col gap-5 p-5'>
+			<main className={`flex flex-col gap-5 p-5`}>
 				<div className='flex w-full gap-5'>
-					<div className='flex-1 p-6 flex flex-col bg-[#414246] justify-between'>
+					<div
+						className={`flex-1 p-6 flex flex-col bg-[#414246] justify-between ${isGameStarted ? 'opacity-0' : ''} transition duration-200`}
+					>
 						<div>
 							<p>Room id: {roomId}</p>
 							<p className='mb-6'>{players.length}/4</p>
@@ -131,7 +133,9 @@ const Page = () => {
 						)}
 					</div>
 
-					<aside className='w-80 p-6 bg-[#414246]'>
+					<aside
+						className={`w-80 p-6 bg-[#414246] ${isGameStarted ? 'opacity-0' : ''} transition duration-200`}
+					>
 						<h2 className='text-sm font-semibold'>Lobby Settings</h2>
 						{config && (
 							<LobbySettingsForm

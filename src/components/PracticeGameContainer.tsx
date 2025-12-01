@@ -16,6 +16,7 @@ import useGameTimer from '../hooks/useGameTimer.ts'
 import useTypingLogic, { buildWordResult } from '../hooks/useTypingLogic.ts'
 import useCaretAnimation from '../hooks/useCaretAnimation.ts'
 import TypingArea from './TypingArea.tsx'
+import { useGameStore } from '../stores/useGameStore.ts'
 
 gsap.registerPlugin(Flip)
 
@@ -29,6 +30,7 @@ const PracticeGameContainer = ({
 	duration,
 }: PracticeGameContainerProps) => {
 	const [results, setResults] = useState<null | SingleplayerResultType>(null)
+	const { setShouldHideUI } = useGameStore()
 
 	const {
 		timeElapsed,
@@ -56,6 +58,14 @@ const PracticeGameContainer = ({
 		resetTimer()
 		setResults(null)
 	}, [resetTimer, resetTypingState])
+
+	useEffect(() => {
+		if (startTime) {
+			setShouldHideUI(true)
+		} else {
+			setShouldHideUI(false)
+		}
+	}, [startTime, setShouldHideUI])
 
 	// Check if time is up
 	useEffect(() => {
@@ -176,10 +186,11 @@ const PracticeGameContainer = ({
 				/>
 			)}
 
-			<TbReload
-				className='size-8 cursor-pointer mt-[50px] mx-auto text-gray-400'
-				onClick={resetGameState}
-			/>
+			<div className='w-full flex justify-center items-center'>
+				<button className='mt-[50px] cursor-pointer' onClick={resetGameState}>
+					<TbReload className='text-gray-400 size-12' />
+				</button>
+			</div>
 		</div>
 	)
 }
