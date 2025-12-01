@@ -1,5 +1,6 @@
 import React from 'react'
 import NavBar from '../components/NavBar'
+import Footer from '../components/Footer.tsx'
 
 const MainLayout = ({
 	children,
@@ -7,10 +8,10 @@ const MainLayout = ({
 	children: React.ReactNode
 }): React.ReactNode => {
 	return (
-		<div>
+		<div className='flex flex-col min-h-screen'>
 			<NavBar />
-			<div>{children}</div>
-			<div>Footer</div>
+			<main className='h-[calc(100vh-64px)]'>{children}</main>
+			<Footer />
 		</div>
 	)
 }

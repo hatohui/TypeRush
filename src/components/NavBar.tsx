@@ -10,7 +10,7 @@ const NavBar = (): React.ReactElement => {
 
 	return (
 		<header
-			className={`${!shouldHideUILocal && 'bg-background-secondary'} transition duration-200 px-6 py-4 max-h-[64px] flex justify-between items-center w-full`}
+			className={`${!shouldHideUILocal && 'bg-background-secondary'} fixed transition duration-200 px-6 py-4 max-h-[64px] flex justify-between items-center w-full`}
 		>
 			<h1
 				className='text-2xl font-bold text-white cursor-pointer'
