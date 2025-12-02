@@ -18,7 +18,7 @@ const PlayerPositions = () => {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const prevOrderRef = useRef<string>('')
 	const stateRef = useRef<any>(null)
-	
+
 	const processedResults = React.useMemo(() => {
 		if (
 			!waveRushGameResult ||
@@ -32,16 +32,20 @@ const PlayerPositions = () => {
 		if (!containerRef.current || processedResults.length === 0) return
 
 		const currentOrder = processedResults.map(r => r.playerId).join(',')
-		
+
 		// Only animate if order actually changed
-		if (prevOrderRef.current !== '' && prevOrderRef.current !== currentOrder && stateRef.current) {
+		if (
+			prevOrderRef.current !== '' &&
+			prevOrderRef.current !== currentOrder &&
+			stateRef.current
+		) {
 			Flip.from(stateRef.current, {
 				duration: 0.6,
 				ease: 'power2.inOut',
 				absolute: true,
 			})
 		}
-		
+
 		// Capture state for next change
 		stateRef.current = Flip.getState(containerRef.current.children)
 		prevOrderRef.current = currentOrder

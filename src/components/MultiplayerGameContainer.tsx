@@ -192,7 +192,15 @@ const MultiplayerGameContainer = ({
 		players: players,
 	})
 
-	const otherPlayers = socket ? players.filter(p => p.id !== socket.id) : []
+	const otherPlayers = useMemo(
+		() => (socket ? players.filter(p => p.id !== socket.id) : []),
+		[players, socket]
+	)
+
+	useEffect(() => {
+		console.log('players', players)
+		console.log('otherPlayers', otherPlayers)
+	}, [otherPlayers, players])
 
 	return (
 		<div>
@@ -248,6 +256,7 @@ const MultiplayerGameContainer = ({
 						isOpponent
 						playerName={player.playerName}
 						color={getPlayerColor(playerIndex)}
+						isDisconnected={player.isDisconnected}
 					/>
 				))}
 				<TypingArea

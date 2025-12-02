@@ -13,6 +13,7 @@ export interface Player {
 		caret: Caret
 	}
 	isHost: boolean
+	isDisconnected: boolean
 }
 
 export type MultiplayerMode = (typeof MULTIPLAYER_MODES)[number]['value']

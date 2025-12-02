@@ -31,7 +31,6 @@ const Page = () => {
 		stopGame,
 		config,
 		handleConfigChange,
-		socket,
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
@@ -50,10 +49,6 @@ const Page = () => {
 			createRoom(values.playerName)
 		}
 	}
-
-	useEffect(() => {
-		console.log(socket?.connected)
-	}, [socket?.connected])
 
 	useEffect(() => {
 		if (connected && roomId && error.type === '') {

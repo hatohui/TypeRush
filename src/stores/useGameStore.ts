@@ -69,7 +69,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 			set({ error: err })
 		})
 
-		socket.on('playerUpdated', (players: Player[]) => {
+		socket.on('playersUpdated', (players: Player[]) => {
 			set({ players })
 		})
 
@@ -163,6 +163,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 		socket.on('waveRushGameStateUpdated', (gameState: WaveRushGameResult) => {
 			set({ waveRushGameResult: gameState })
+		})
+
+		socket.on('hostChanged', () => {
+			set({ isHost: true })
 		})
 
 		// ✅ Server tells clients to start transition
