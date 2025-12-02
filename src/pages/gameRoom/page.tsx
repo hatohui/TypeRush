@@ -4,13 +4,14 @@ import JoinRoomModal from '../../components/JoinRoomModal.tsx'
 import GameStartModal from '../../components/GameStartModal.tsx'
 import { Button, type FormProps } from 'antd'
 import { PiCrownFill } from 'react-icons/pi'
+import { IoClose } from 'react-icons/io5'
 import GameFinishModalMultiplayer from '../../components/GameFinishModalMultiplayer.tsx'
 import { SAMPLE_WORDS, WAVE_RUSH_WORDS } from '../../common/constant.ts'
 import type { MultiplayerMode, FieldType } from '../../common/types.ts'
 import LobbySettingsForm from '../../components/GameConfigForm.tsx'
 import WaveRushGameContainer from '../../components/WaveRushGameContainer.tsx'
 import MultiplayerGameContainer from '../../components/MultiplayerGameContainer.tsx'
-import WaveRushResults from '../../components/PlayerWaveRushResult.tsx'
+import PlayerPositions from '../../components/PlayerPositions.tsx'
 
 const Page = () => {
 	const {
@@ -30,7 +31,7 @@ const Page = () => {
 		stopGame,
 		config,
 		handleConfigChange,
-		waveRushGameResult,
+		socket,
 	} = useGameStore()
 	const [open, setOpen] = useState(true)
 	const [confirmLoading, setConfirmLoading] = useState(false)
@@ -49,6 +50,10 @@ const Page = () => {
 			createRoom(values.playerName)
 		}
 	}
+
+	useEffect(() => {
+		console.log(socket?.connected)
+	}, [socket?.connected])
 
 	useEffect(() => {
 		if (connected && roomId && error.type === '') {
@@ -85,7 +90,7 @@ const Page = () => {
 	}
 
 	return (
-		<div className='min-h-screen bg-[#383A3E] text-white flex flex-col'>
+		<div className='h-full bg-[#383A3E] text-white flex flex-col justify-center relative'>
 			<JoinRoomModal
 				open={open}
 				onOk={handleOk}
@@ -148,34 +153,37 @@ const Page = () => {
 						)}
 					</aside>
 				</div>
-
-				{roomId && isGameStarted && (
-					<div className='flex w-full justify-center items-center'>
-						{config && config.mode === 'wave-rush' && (
-							<div className='w-full flex gap-5'>
-								<aside className='w-[30%]'>
-									<WaveRushResults
-										results={waveRushGameResult}
-										players={players}
-									/>
-								</aside>
-								<div className='max-w-[1200px] min-w-[400px] flex justify-center'>
-									<WaveRushGameContainer
-										words={WAVE_RUSH_WORDS}
-										roundDuration={config.duration}
-									/>
-								</div>
-							</div>
-						)}
-						{config && config.mode === 'type-race' && (
-							<MultiplayerGameContainer
-								words={SAMPLE_WORDS}
-								mode={'type-race'}
-							/>
-						)}
-					</div>
-				)}
 			</main>
+
+			{roomId && isGameStarted && (
+				<div className='absolute inset-0 flex justify-center items-center'>
+					{isHost && (
+						<button
+							onClick={() => stopGame(roomId)}
+							className='absolute top-5 right-5 w-10 h-10 flex items-center justify-center bg-red-500 hover:bg-red-600 rounded-full transition-colors z-10'
+							aria-label='Stop game'
+						>
+							<IoClose size={24} />
+						</button>
+					)}
+					{config && config.mode === 'wave-rush' && (
+						<div className='w-full flex gap-5 px-5'>
+							<aside className='w-[30%]'>
+								<PlayerPositions />
+							</aside>
+							<div className='max-w-[1200px] min-w-[400px] flex justify-center'>
+								<WaveRushGameContainer
+									words={WAVE_RUSH_WORDS}
+									roundDuration={config.duration}
+								/>
+							</div>
+						</div>
+					)}
+					{config && config.mode === 'type-race' && (
+						<MultiplayerGameContainer words={SAMPLE_WORDS} mode={'type-race'} />
+					)}
+				</div>
+			)}
 
 			{renderStartModal && <GameStartModal duration={3} />}
 

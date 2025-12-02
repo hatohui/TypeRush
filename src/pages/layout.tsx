@@ -10,7 +10,7 @@ const MainLayout = ({
 	return (
 		<div className='flex flex-col min-h-screen'>
 			<NavBar />
-			<main className='h-[calc(100vh-64px)]'>{children}</main>
+			<main className='h-[calc(100vh-64px-54px)]'>{children}</main>
 			<Footer />
 		</div>
 	)
