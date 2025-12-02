@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Flip } from 'gsap/Flip'
+import { gsap } from 'gsap'
 import type { Socket } from 'socket.io-client'
 import type { Player } from '../common/types.ts'
 
@@ -21,6 +22,8 @@ const useCaretAnimation = ({
 	const containerRef = useRef<HTMLDivElement>(null)
 	const caretRef = useRef<HTMLSpanElement | null>(null)
 	const caretRefs = useRef<(HTMLSpanElement | null)[]>([])
+	const shakeAnim = useRef<gsap.core.Timeline>(null)
+	const mistakeAnimCaretRef = useRef<HTMLSpanElement | null>(null)
 
 	// Animate self caret
 	useEffect(() => {
@@ -82,6 +85,57 @@ const useCaretAnimation = ({
 		if (!isMultiplayer) return
 		caretRefs.current = Array.from({ length: 4 }, () => null)
 	}, [isMultiplayer])
+
+	// Mistake animation setup
+	useEffect(() => {
+		if (!isMultiplayer) return
+
+		const caretElement = mistakeAnimCaretRef.current
+
+		if (!caretElement) {
+			return
+		}
+
+		shakeAnim.current?.kill()
+
+		shakeAnim.current = gsap
+			.timeline({ paused: true })
+			.to(caretElement, {
+				x: -4,
+				backgroundColor: 'red',
+				duration: 0.08,
+				ease: 'power2.out',
+			})
+			.to(caretElement, {
+				x: 4,
+				duration: 0.08,
+				ease: 'power2.inOut',
+			})
+			.to(caretElement, {
+				x: -3,
+				duration: 0.08,
+				ease: 'power2.inOut',
+			})
+			.to(caretElement, {
+				x: 3,
+				duration: 0.08,
+				ease: 'power2.inOut',
+			})
+			.to(caretElement, {
+				x: 0,
+				backgroundColor: '#3b82f6',
+				duration: 0.15,
+				ease: 'power2.out',
+			})
+
+		return () => {
+			shakeAnim.current?.kill()
+		}
+	}, [isMultiplayer, caretRefs.current[3]])
+
+	const triggerMistakeAnimation = () => {
+		shakeAnim.current?.restart()
+	}
 
 	// Animate opponent carets
 	useEffect(() => {
@@ -172,6 +226,8 @@ const useCaretAnimation = ({
 		containerRef,
 		caretRef,
 		caretRefs,
+		triggerMistakeAnimation,
+		mistakeAnimCaretRef,
 	}
 }
 export default useCaretAnimation

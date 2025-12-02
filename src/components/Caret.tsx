@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import React, { forwardRef } from 'react'
 
 interface CaretProps {
 	isOpponent?: boolean
@@ -6,6 +6,7 @@ interface CaretProps {
 	color?: string
 	className?: string
 	isDisconnected?: boolean
+	mistakeAnimCaretRef?: React.RefObject<HTMLSpanElement | null>
 }
 
 const Caret = forwardRef<HTMLSpanElement, CaretProps>(
@@ -16,11 +17,12 @@ const Caret = forwardRef<HTMLSpanElement, CaretProps>(
 			color = '#3b82f6',
 			className = '',
 			isDisconnected = false,
+			mistakeAnimCaretRef,
 		},
 		ref
 	) => {
 		return (
-			<span className={`relative inline-block ${className}`} ref={ref}>
+			<span className={`relative inline-block ${className} h-[1em]`} ref={ref}>
 				<span
 					className='inline-block w-[1.5px] animate-pulse align-text-bottom'
 					style={{
@@ -29,6 +31,7 @@ const Caret = forwardRef<HTMLSpanElement, CaretProps>(
 						marginLeft: '-1px',
 						opacity: isDisconnected ? 0.3 : 1,
 					}}
+					ref={mistakeAnimCaretRef}
 				/>
 
 				{isOpponent && (

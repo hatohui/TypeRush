@@ -1,5 +1,5 @@
 import { Button } from 'antd'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useGameStore } from '../stores/useGameStore.ts'
 import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
@@ -53,6 +53,8 @@ const MultiplayerGameContainer = ({
 		config,
 	} = useGameStore()
 
+	const mistakeAnimationRef = useRef<(() => void) | null>(null)
+
 	const {
 		currentWordIdx,
 		currentWord,
@@ -64,7 +66,7 @@ const MultiplayerGameContainer = ({
 		getCharStyle,
 		onKeyDownMultiplayer,
 		handleSpacePress,
-	} = useTypingLogic(words)
+	} = useTypingLogic(words, mistakeAnimationRef)
 	const [results, setResults] = useState<null | SingleplayerResultType>(null)
 
 	const getPlayerColor = (playerIndex: number) => {
@@ -184,7 +186,12 @@ const MultiplayerGameContainer = ({
 		throttledUpdateCaret({ caretIdx, wordIdx: currentWordIdx }, roomId)
 	}, [caretIdx, currentWordIdx, roomId, throttledUpdateCaret])
 
-	const { containerRef, caretRefs } = useCaretAnimation({
+	const {
+		containerRef,
+		caretRefs,
+		triggerMistakeAnimation,
+		mistakeAnimCaretRef,
+	} = useCaretAnimation({
 		caretIdx,
 		currentWordIdx,
 		isMultiplayer: true,
@@ -198,9 +205,8 @@ const MultiplayerGameContainer = ({
 	)
 
 	useEffect(() => {
-		console.log('players', players)
-		console.log('otherPlayers', otherPlayers)
-	}, [otherPlayers, players])
+		mistakeAnimationRef.current = triggerMistakeAnimation
+	}, [triggerMistakeAnimation])
 
 	return (
 		<div>
@@ -246,6 +252,7 @@ const MultiplayerGameContainer = ({
 						caretRefs.current[3] = el
 					}}
 					color={getPlayerColor(3)}
+					mistakeAnimCaretRef={mistakeAnimCaretRef}
 				/>
 				{otherPlayers.map((player, playerIndex) => (
 					<Caret
