@@ -63,7 +63,7 @@ export const buildWordResult = (
 
 const useTypingLogic = (
 	words: string[],
-	animationRef: React.RefObject<(() => void) | null>
+	animationRef?: React.RefObject<(() => void) | null>
 ) => {
 	const [localWords, setLocalWords] = useState<string[]>(words)
 	const [currentWordIdx, setCurrentWordIdx] = useState(0)
@@ -222,7 +222,7 @@ const useTypingLogic = (
 			setCaretIdx(prev => prev + 1)
 			setTyped(prev => prev + e.key)
 		} else {
-			animationRef.current?.()
+			animationRef?.current?.()
 			e.preventDefault()
 		}
 	}
