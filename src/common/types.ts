@@ -191,6 +191,7 @@ export const CharacterState = {
 	CORRECT: 'correct',
 	INCORRECT: 'incorrect',
 	UNTYPED: 'untyped',
+	OVERFLOW: 'overflow',
 }
 
 export type SingleplayerResultType = {

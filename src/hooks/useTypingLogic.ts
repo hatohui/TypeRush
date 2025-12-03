@@ -25,7 +25,7 @@ export const buildWordResult = (word: string, typed: string): string[] => {
 	if (typed.length > word.length) {
 		const overflowCount = typed.length - word.length
 		for (let i = 0; i < overflowCount; i++) {
-			currentResults.push(CharacterState.INCORRECT)
+			currentResults.push(CharacterState.OVERFLOW)
 		}
 	}
 
@@ -49,6 +49,8 @@ const useTypingLogic = (
 		if (typed.trim() === '') return
 
 		const currentResults = buildWordResult(words[currentWordIdx], typed)
+
+		console.log(currentResults)
 
 		setWordResults(prev => ({
 			...prev,
@@ -83,7 +85,8 @@ const useTypingLogic = (
 				state =
 					storedResults[idx] === CharacterState.CORRECT
 						? 'text-white'
-						: storedResults[idx] === CharacterState.INCORRECT
+						: storedResults[idx] === CharacterState.INCORRECT ||
+							  CharacterState.OVERFLOW
 							? 'text-red-500 underline'
 							: ''
 			}
