@@ -1,7 +1,202 @@
-interface GameFinishResultsWGraph {}
+import {
+	LineChart,
+	Line,
+	XAxis,
+	YAxis,
+	Tooltip,
+	ResponsiveContainer,
+} from 'recharts'
+import type { SingleplayerResultType, WordResultType } from '../common/types.ts'
 
-const GameFinishResultsWGraph = () => {
-	return <div></div>
+interface GameFinishResultsWGraph {
+	stats: SingleplayerResultType | null
+	wordResults: Record<number, WordResultType[]>
+	testType: string
+	timeElapsed: number
+	startTime: number | null
+}
+
+const GameFinishResultsWGraph = ({
+	stats,
+	wordResults,
+	testType = 'custom',
+	timeElapsed,
+	startTime,
+}: GameFinishResultsWGraph) => {
+	if (!stats || !startTime) return null
+
+	// Flatten wordResults from Record<number, WordResultType[]> to single array
+	const allWords = Object.values(wordResults).flat()
+
+	// Group words by 1-second windows
+	const totalSeconds = Math.ceil(timeElapsed)
+	const secondBuckets: {
+		time: number
+		wpm: number
+		rawWpm: number
+		errors: number
+	}[] = []
+
+	for (let second = 0; second <= totalSeconds; second++) {
+		const windowStart = startTime + second * 1000
+		const windowEnd = startTime + (second + 1) * 1000
+
+		// Get all words in this 1-second window
+		const wordsInWindow = allWords.filter(
+			w => w.timestamp >= windowStart && w.timestamp < windowEnd
+		)
+
+		// Count errors in this window
+		const errorsInWindow = wordsInWindow.filter(
+			w => w.state === 'incorrect' || w.state === 'overflow'
+		).length
+
+		// Calculate WPM up to this point
+		const wordsUpToNow = allWords.filter(w => w.timestamp < windowEnd).length
+		const timeElapsedSoFar = second + 1
+		const wpm =
+			timeElapsedSoFar > 0 ? (wordsUpToNow / 5 / timeElapsedSoFar) * 60 : 0
+		const rawWpm =
+			timeElapsedSoFar > 0 ? (wordsUpToNow / 5 / timeElapsedSoFar) * 60 : 0
+
+		secondBuckets.push({
+			time: second,
+			wpm: Math.round(wpm),
+			rawWpm: Math.round(rawWpm),
+			errors: errorsInWindow,
+		})
+	}
+
+	const chartData = secondBuckets
+
+	// Generate ticks for X-axis (1 second intervals)
+	const xAxisTicks = Array.from({ length: totalSeconds + 1 }, (_, i) => i)
+
+	// Calculate consistency (standard deviation of WPM)
+	const wpmValues = chartData.map(d => d.wpm)
+	const avgWpm = wpmValues.reduce((a, b) => a + b, 0) / wpmValues.length
+	const variance =
+		wpmValues.reduce((sum, wpm) => sum + Math.pow(wpm - avgWpm, 2), 0) /
+		wpmValues.length
+	const consistency = Math.max(0, 100 - Math.sqrt(variance))
+
+	return (
+		<div className='w-full max-w-4xl mx-auto p-6 bg-[#2c2e31] rounded-lg text-white transition duration-200'>
+			{/* Top Stats */}
+			<div className='flex gap-8 mb-6'>
+				<div>
+					<div className='text-sm text-gray-400'>wpm</div>
+					<div className='text-5xl font-bold text-yellow-400'>
+						{Math.round(stats.wpm)}
+					</div>
+				</div>
+				<div>
+					<div className='text-sm text-gray-400'>acc</div>
+					<div className='text-5xl font-bold text-yellow-400'>
+						{Math.round(stats.accuracy)}%
+					</div>
+				</div>
+			</div>
+
+			{/* Chart */}
+			<div className='mb-6 relative'>
+				<ResponsiveContainer width='100%' height={200}>
+					<LineChart data={chartData}>
+						<XAxis
+							dataKey='time'
+							stroke='#6b7280'
+							tick={{ fill: '#6b7280', fontSize: 12 }}
+							ticks={xAxisTicks}
+							domain={[0, Math.ceil(timeElapsed)]}
+						/>
+						<YAxis
+							yAxisId='left'
+							stroke='#6b7280'
+							tick={{ fill: '#6b7280', fontSize: 12 }}
+							domain={[0, 'auto']}
+							label={{
+								value: 'wpm',
+								angle: -90,
+								position: 'insideLeft',
+								fill: '#6b7280',
+							}}
+						/>
+						<YAxis
+							yAxisId='right'
+							orientation='right'
+							stroke='#6b7280'
+							tick={{ fill: '#6b7280', fontSize: 12 }}
+							domain={[0, 'auto']}
+							label={{
+								value: 'errors',
+								angle: 90,
+								position: 'insideRight',
+								fill: '#6b7280',
+							}}
+						/>
+						<Tooltip
+							contentStyle={{
+								backgroundColor: '#1f2937',
+								border: 'none',
+								borderRadius: '4px',
+							}}
+							labelStyle={{ color: '#9ca3af' }}
+						/>
+						<Line
+							yAxisId='left'
+							type='monotone'
+							dataKey='rawWpm'
+							stroke='#6b7280'
+							strokeWidth={2}
+							dot={false}
+							strokeDasharray='5 5'
+						/>
+						<Line
+							yAxisId='left'
+							type='monotone'
+							dataKey='wpm'
+							stroke='#eab308'
+							strokeWidth={2}
+							dot={false}
+						/>
+						<Line
+							yAxisId='right'
+							type='monotone'
+							dataKey='errors'
+							stroke='#ef4444'
+							strokeWidth={2}
+							dot={false}
+						/>
+					</LineChart>
+				</ResponsiveContainer>
+			</div>
+
+			{/* Bottom Stats */}
+			<div className='flex justify-between items-center text-sm'>
+				<div className='text-gray-400'>{testType}</div>
+				<div className='flex gap-8'>
+					<div>
+						<div className='text-gray-400'>characters</div>
+						<div className='text-yellow-400 text-lg'>
+							{stats.correct}/{stats.incorrect}/{stats.overflow}/{stats.missed}
+						</div>
+					</div>
+					<div>
+						<div className='text-gray-400'>consistency</div>
+						<div className='text-yellow-400 text-lg'>
+							{Math.round(consistency)}%
+						</div>
+					</div>
+					<div>
+						<div className='text-gray-400'>time</div>
+						<div className='text-yellow-400 text-lg'>
+							{Math.round(timeElapsed)}s
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
 }
 
 export default GameFinishResultsWGraph

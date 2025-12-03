@@ -81,8 +81,6 @@ const useTypingLogic = (
 
 		const currentResults = buildWordResult(words[currentWordIdx], typed)
 
-		console.log(currentResults)
-
 		setWordResults(prev => ({
 			...prev,
 			[currentWordIdx]: currentResults,
