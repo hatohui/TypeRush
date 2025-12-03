@@ -33,6 +33,8 @@ const GameFinishModalSingle = ({
 					<p>Raw WPM: {results.rawWpm.toFixed(1)}</p>
 					<p>Correct chars: {results.correct}</p>
 					<p>Incorrect chars: {results.incorrect}</p>
+					<p>Overflow chars: {results.overflow}</p>
+					<p>Missed chars: {results.missed}</p>
 				</div>
 			)}
 			{isMultiplayer && typeof position === 'number' && (

@@ -192,6 +192,15 @@ export const CharacterState = {
 	INCORRECT: 'incorrect',
 	UNTYPED: 'untyped',
 	OVERFLOW: 'overflow',
+} as const
+
+export type CharacterStateType =
+	(typeof CharacterState)[keyof typeof CharacterState]
+
+export type WordResultType = {
+	char: string
+	state: CharacterStateType
+	timestamp: number
 }
 
 export type SingleplayerResultType = {
@@ -200,6 +209,8 @@ export type SingleplayerResultType = {
 	rawWpm: number
 	correct: number
 	incorrect: number
+	overflow: number
+	missed: number
 }
 
 export type WaveRushRoundResultType = SingleplayerResultType & {

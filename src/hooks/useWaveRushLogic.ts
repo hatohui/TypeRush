@@ -1,5 +1,9 @@
 import { useState, useCallback, useEffect, type RefObject } from 'react'
-import type { WaveRushRoundResultType } from '../common/types.ts'
+import type {
+	SingleplayerResultType,
+	WaveRushRoundResultType,
+	WordResultType,
+} from '../common/types.ts'
 import { useGameStore } from '../stores/useGameStore.ts'
 import { buildFinalWordResult } from './useTypingLogic.ts'
 import type { Socket } from 'socket.io-client'
@@ -58,9 +62,9 @@ export const useWaveRushRound = ({
 	currentWordIdx: number
 	caretIdx: number
 	typed: string
-	wordResults: Record<number, string[]>
+	wordResults: Record<number, WordResultType[]>
 	socket: Socket | null
-	calculateStats: (overrideWordResults?: Record<number, string[]>) => {
+	calculateStats: (overrideWordResults?: Record<number, WordResultType[]>) => {
 		accuracy: number
 		wpm: number
 		rawWpm: number
@@ -79,12 +83,12 @@ export const useWaveRushRound = ({
 	const { isTransitioning } = useGameStore()
 
 	const submitRoundResult = useCallback(
-		(completeWordResults?: Record<number, string[]>) => {
+		(completeWordResults?: Record<number, WordResultType[]>) => {
 			if (!socket?.id || hasSubmittedResult) return
 
 			const stats = calculateStats(completeWordResults)
 			waveRushMode?.onRoundComplete({
-				...stats,
+				...(stats as SingleplayerResultType),
 				playerId: socket.id,
 				timeElapsed: gameTime,
 			})

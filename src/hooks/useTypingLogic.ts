@@ -1,31 +1,60 @@
 import React, { useCallback, useState } from 'react'
-import { BlockedKeysSet, CharacterState, InputKey } from '../common/types.ts'
+import {
+	BlockedKeysSet,
+	CharacterState,
+	type CharacterStateType,
+	InputKey,
+	type WordResultType,
+} from '../common/types.ts'
 import { MAX_OVERFLOW } from '../common/constant.ts'
 
 // Utility function to build final word result for stats calculation (multiplayer mode)
-export const buildFinalWordResult = (word: string, typed: string): string[] => {
+export const buildFinalWordResult = (
+	word: string,
+	typed: string
+): WordResultType[] => {
 	return word.split('').map((char, idx) => {
-		return typed[idx] === char ? 'correct' : 'incorrect'
+		return {
+			char: char,
+			state:
+				typed[idx] === char ? CharacterState.CORRECT : CharacterState.INCORRECT,
+			timestamp: Date.now(),
+		} as WordResultType
 	})
 }
 
 // Utility function to build word result with character-by-character evaluation
 // Handles untyped characters and overflow
-export const buildWordResult = (word: string, typed: string): string[] => {
+export const buildWordResult = (
+	word: string,
+	typed: string
+): WordResultType[] => {
 	const currentResults = word.split('').map((char, idx) => {
+		let charStatus: CharacterStateType
+
 		if (idx < typed.length) {
-			return typed[idx] === char
-				? CharacterState.CORRECT
-				: CharacterState.INCORRECT
+			charStatus =
+				typed[idx] === char ? CharacterState.CORRECT : CharacterState.INCORRECT
+		} else {
+			charStatus = CharacterState.UNTYPED
 		}
-		return CharacterState.UNTYPED
+
+		return {
+			char: char,
+			state: charStatus,
+			timestamp: Date.now(),
+		} as WordResultType
 	})
 
 	// Handle overflow characters
 	if (typed.length > word.length) {
 		const overflowCount = typed.length - word.length
 		for (let i = 0; i < overflowCount; i++) {
-			currentResults.push(CharacterState.OVERFLOW)
+			currentResults.push({
+				char: typed[word.length + i],
+				state: CharacterState.OVERFLOW,
+				timestamp: Date.now(),
+			})
 		}
 	}
 
@@ -43,7 +72,9 @@ const useTypingLogic = (
 	)
 	const [typed, setTyped] = useState<string>('')
 	const [caretIdx, setCaretIdx] = useState(-1)
-	const [wordResults, setWordResults] = useState<Record<number, string[]>>({})
+	const [wordResults, setWordResults] = useState<
+		Record<number, WordResultType[]>
+	>({})
 
 	const handleSpacePress = (isFinish: boolean) => {
 		if (typed.trim() === '') return
@@ -83,9 +114,9 @@ const useTypingLogic = (
 			const storedResults = wordResults[wordIdx]
 			if (storedResults && storedResults[idx]) {
 				state =
-					storedResults[idx] === CharacterState.CORRECT
+					storedResults[idx].state === CharacterState.CORRECT
 						? 'text-white'
-						: storedResults[idx] === CharacterState.INCORRECT ||
+						: storedResults[idx].state === CharacterState.INCORRECT ||
 							  CharacterState.OVERFLOW
 							? 'text-red-500 underline'
 							: ''
