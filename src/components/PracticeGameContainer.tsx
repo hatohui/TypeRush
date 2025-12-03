@@ -194,6 +194,7 @@ const PracticeGameContainer = ({
 					testType={'custom'}
 					timeElapsed={timeElapsed}
 					startTime={startTime}
+					duration={duration}
 				/>
 			</div>
 

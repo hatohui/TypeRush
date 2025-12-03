@@ -6,7 +6,13 @@ import {
 	Tooltip,
 	ResponsiveContainer,
 } from 'recharts'
-import type { SingleplayerResultType, WordResultType } from '../common/types.ts'
+import { Popover } from 'antd'
+import {
+	CharacterState,
+	type GameDuration,
+	type SingleplayerResultType,
+	type WordResultType,
+} from '../common/types.ts'
 
 interface GameFinishResultsWGraph {
 	stats: SingleplayerResultType | null
@@ -14,14 +20,15 @@ interface GameFinishResultsWGraph {
 	testType: string
 	timeElapsed: number
 	startTime: number | null
+	duration: GameDuration
 }
 
 const GameFinishResultsWGraph = ({
 	stats,
 	wordResults,
-	testType = 'custom',
 	timeElapsed,
 	startTime,
+	duration,
 }: GameFinishResultsWGraph) => {
 	if (!stats || !startTime) return null
 
@@ -48,16 +55,27 @@ const GameFinishResultsWGraph = ({
 
 		// Count errors in this window
 		const errorsInWindow = wordsInWindow.filter(
-			w => w.state === 'incorrect' || w.state === 'overflow'
+			w =>
+				w.state === CharacterState.INCORRECT ||
+				w.state === CharacterState.OVERFLOW
 		).length
 
 		// Calculate WPM up to this point
-		const wordsUpToNow = allWords.filter(w => w.timestamp < windowEnd).length
 		const timeElapsedSoFar = second + 1
+
+		// WPM: based on correct characters only
+		const correctCharsUpToNow = allWords.filter(
+			w => w.timestamp < windowEnd && w.state === CharacterState.CORRECT
+		).length
 		const wpm =
-			timeElapsedSoFar > 0 ? (wordsUpToNow / 5 / timeElapsedSoFar) * 60 : 0
+			timeElapsedSoFar > 0
+				? (correctCharsUpToNow / 5 / timeElapsedSoFar) * 60
+				: 0
+
+		// Raw WPM: based on all characters (correct + incorrect + overflow + missed)
+		const allCharsUpToNow = allWords.filter(w => w.timestamp < windowEnd).length
 		const rawWpm =
-			timeElapsedSoFar > 0 ? (wordsUpToNow / 5 / timeElapsedSoFar) * 60 : 0
+			timeElapsedSoFar > 0 ? (allCharsUpToNow / 5 / timeElapsedSoFar) * 60 : 0
 
 		secondBuckets.push({
 			time: second,
@@ -173,26 +191,60 @@ const GameFinishResultsWGraph = ({
 
 			{/* Bottom Stats */}
 			<div className='flex justify-between items-center text-sm'>
-				<div className='text-gray-400'>{testType}</div>
+				<div className='text-gray-400'>
+					Timed <strong>{duration !== 0 ? duration : 'Infinite'}</strong>
+				</div>
 				<div className='flex gap-8'>
-					<div>
-						<div className='text-gray-400'>characters</div>
-						<div className='text-yellow-400 text-lg'>
-							{stats.correct}/{stats.incorrect}/{stats.overflow}/{stats.missed}
+					<Popover
+						content={
+							<div className='text-sm'>
+								<div>Correct: {stats.correct}</div>
+								<div>Incorrect: {stats.incorrect}</div>
+								<div>Overflow: {stats.overflow}</div>
+								<div>Missed: {stats.missed}</div>
+							</div>
+						}
+						title='Character Breakdown'
+					>
+						<div className='cursor-pointer'>
+							<div className='text-gray-400'>characters</div>
+							<div className='text-yellow-400 text-lg'>
+								{stats.correct}/{stats.incorrect}/{stats.overflow}/
+								{stats.missed}
+							</div>
 						</div>
-					</div>
-					<div>
-						<div className='text-gray-400'>consistency</div>
-						<div className='text-yellow-400 text-lg'>
-							{Math.round(consistency)}%
+					</Popover>
+					<Popover
+						content={
+							<div className='text-sm'>
+								Measures how stable your typing speed is throughout the test.
+								Higher is better.
+							</div>
+						}
+						title='Consistency'
+					>
+						<div className='cursor-pointer'>
+							<div className='text-gray-400'>consistency</div>
+							<div className='text-yellow-400 text-lg'>
+								{Math.round(consistency)}%
+							</div>
 						</div>
-					</div>
-					<div>
-						<div className='text-gray-400'>time</div>
-						<div className='text-yellow-400 text-lg'>
-							{Math.round(timeElapsed)}s
+					</Popover>
+					<Popover
+						content={
+							<div className='text-sm'>
+								Total time taken to complete the test
+							</div>
+						}
+						title='Time'
+					>
+						<div className='cursor-pointer'>
+							<div className='text-gray-400'>time</div>
+							<div className='text-yellow-400 text-lg'>
+								{Math.round(timeElapsed)}s
+							</div>
 						</div>
-					</div>
+					</Popover>
 				</div>
 			</div>
 		</div>
