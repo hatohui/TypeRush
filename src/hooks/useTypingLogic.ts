@@ -11,14 +11,15 @@ import { MAX_OVERFLOW } from '../common/constant.ts'
 // Utility function to build final word result for stats calculation (multiplayer mode)
 export const buildFinalWordResult = (
 	word: string,
-	typed: string
+	typed: string,
+	timestamps: number[]
 ): WordResultType[] => {
 	return word.split('').map((char, idx) => {
 		return {
 			char: char,
 			state:
 				typed[idx] === char ? CharacterState.CORRECT : CharacterState.INCORRECT,
-			timestamp: Date.now(),
+			timestamp: timestamps[idx] || Date.now(),
 		} as WordResultType
 	})
 }
@@ -27,7 +28,8 @@ export const buildFinalWordResult = (
 // Handles untyped characters and overflow
 export const buildWordResult = (
 	word: string,
-	typed: string
+	typed: string,
+	timestamps: number[]
 ): WordResultType[] => {
 	const currentResults = word.split('').map((char, idx) => {
 		let charStatus: CharacterStateType
@@ -43,7 +45,7 @@ export const buildWordResult = (
 			char: char,
 			typedChar: typed[idx],
 			state: charStatus,
-			timestamp: Date.now(),
+			timestamp: timestamps[idx] || Date.now(),
 		} as WordResultType
 	})
 
@@ -51,11 +53,12 @@ export const buildWordResult = (
 	if (typed.length > word.length) {
 		const overflowCount = typed.length - word.length
 		for (let i = 0; i < overflowCount; i++) {
+			const idx = word.length + i
 			currentResults.push({
-				char: typed[word.length + i],
-				typedChar: typed[word.length + i],
+				char: typed[idx],
+				typedChar: typed[idx],
 				state: CharacterState.OVERFLOW,
-				timestamp: Date.now(),
+				timestamp: timestamps[idx] || Date.now(),
 			})
 		}
 	}
@@ -77,11 +80,17 @@ const useTypingLogic = (
 	const [wordResults, setWordResults] = useState<
 		Record<number, WordResultType[]>
 	>({})
+	// Track timestamps for each character as they're typed
+	const [charTimestamps, setCharTimestamps] = useState<number[]>([])
 
 	const handleSpacePress = (isFinish: boolean) => {
 		if (typed.trim() === '') return
 
-		const currentResults = buildWordResult(words[currentWordIdx], typed)
+		const currentResults = buildWordResult(
+			words[currentWordIdx],
+			typed,
+			charTimestamps
+		)
 
 		setWordResults(prev => ({
 			...prev,
@@ -96,6 +105,7 @@ const useTypingLogic = (
 				return nextIdx
 			})
 			setTyped('')
+			setCharTimestamps([])
 		}
 	}
 
@@ -106,6 +116,7 @@ const useTypingLogic = (
 		setWordResults({})
 		setCaretIdx(-1)
 		setLocalWords(words)
+		setCharTimestamps([])
 	}, [words])
 
 	const getCharStyle = (wordIdx: number, idx: number, char: string) => {
@@ -163,6 +174,7 @@ const useTypingLogic = (
 					const newLength = typed.length - 1
 					setCaretIdx(prev => Math.max(-1, prev - 1))
 					setTyped(prev => prev.slice(0, -1))
+					setCharTimestamps(prev => prev.slice(0, -1))
 
 					if (newLength >= words[currentWordIdx].length) {
 						const newWord = localWords[currentWordIdx].slice(0, newLength)
@@ -190,6 +202,7 @@ const useTypingLogic = (
 
 			setCaretIdx(prev => prev + 1)
 			setTyped(prev => prev + e.key)
+			setCharTimestamps(prev => [...prev, Date.now()])
 
 			if (!startTime) setStartTime(Date.now())
 		}
@@ -213,6 +226,7 @@ const useTypingLogic = (
 			if (typed.length > 0) {
 				setCaretIdx(prev => Math.max(-1, prev - 1))
 				setTyped(prev => prev.slice(0, -1))
+				setCharTimestamps(prev => prev.slice(0, -1))
 			}
 			return
 		}
@@ -221,6 +235,7 @@ const useTypingLogic = (
 		if (nextChar && nextChar === e.key) {
 			setCaretIdx(prev => prev + 1)
 			setTyped(prev => prev + e.key)
+			setCharTimestamps(prev => [...prev, Date.now()])
 		} else {
 			animationRef?.current?.()
 			e.preventDefault()
@@ -246,6 +261,7 @@ const useTypingLogic = (
 		getCharStyle,
 		onKeyDownMultiplayer,
 		isBlockedKey,
+		charTimestamps,
 	}
 }
 

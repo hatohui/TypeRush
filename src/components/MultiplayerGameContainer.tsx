@@ -66,6 +66,7 @@ const MultiplayerGameContainer = ({
 		getCharStyle,
 		onKeyDownMultiplayer,
 		handleSpacePress,
+		charTimestamps,
 	} = useTypingLogic(words, mistakeAnimationRef)
 	const [playerStats, setPlayerStats] = useState<null | PlayerStats>(null)
 
@@ -134,7 +135,11 @@ const MultiplayerGameContainer = ({
 			mode === 'type-race'
 		) {
 			// Build final word result synchronously to include in stats
-			const finalWordResult = buildFinalWordResult(words[currentWordIdx], typed)
+			const finalWordResult = buildFinalWordResult(
+				words[currentWordIdx],
+				typed,
+				charTimestamps
+			)
 
 			// Create complete wordResults with final word
 			const completeWordResults = {

@@ -47,25 +47,23 @@ const WordHistory = ({
 		if (allChars.length === 0) return
 
 		const startTime = allChars[0].timestamp
-		let currentIndex = 0
+		const timeouts: ReturnType<typeof setTimeout>[] = []
 
-		const animate = () => {
-			if (currentIndex >= allChars.length) return
-
-			const char = allChars[currentIndex]
+		// Schedule all character reveals
+		allChars.forEach(char => {
 			const delay = char.timestamp - startTime
-			console.log(delay)
 
-			setTimeout(() => {
+			const timeout = setTimeout(() => {
 				setReplayProgress({ wordIdx: char.wordIdx, charIdx: char.charIdx })
-				currentIndex++
-				if (currentIndex < allChars.length) {
-					animate()
-				}
 			}, delay)
-		}
 
-		animate()
+			timeouts.push(timeout)
+		})
+
+		// Cleanup function
+		return () => {
+			timeouts.forEach(timeout => clearTimeout(timeout))
+		}
 	}, [usage, isPlaying, wordResults])
 
 	const getCharStyle = (
