@@ -58,17 +58,16 @@ const GameFinishModalMultiplayer = ({
 										</div>
 										<div className='text-gray-500 text-sm'>
 											Accuracy: {entry.stats.accuracy.toFixed(1)}% | WPM:{' '}
-											{entry.stats.wpm}
+											{Math.round(entry.stats.wpm)}
 										</div>
 									</div>
 								</div>
 								<div className='text-right'>
 									<div className='text-sm text-gray-500'>
-										Raw WPM: {entry.stats.rawWpm}
+										Raw WPM: {Math.round(entry.stats.rawWpm)}
 									</div>
 									<div className='text-xs text-gray-400'>
-										{entry.stats.correct} correct / {entry.stats.incorrect}{' '}
-										incorrect
+										Time elapsed: {entry.stats.timeElapsed} s
 									</div>
 								</div>
 							</div>
