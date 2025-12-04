@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Caret from './Caret.tsx'
 import { gsap } from 'gsap'
 import { Flip } from 'gsap/Flip'
@@ -17,6 +17,7 @@ import TypingArea from './TypingArea.tsx'
 import { useGameStore } from '../stores/useGameStore.ts'
 import GameFinishResultsWGraph from './GameFinishResultsWGraph.tsx'
 import ResultsGraphToolbar from './ResultsGraphToolbar.tsx'
+import * as htmlToImage from 'html-to-image'
 
 gsap.registerPlugin(Flip)
 
@@ -32,6 +33,7 @@ const PracticeGameContainer = ({
 	const [playerStats, setPlayerStats] = useState<null | PlayerStats>(null)
 	const { setShouldHideUI } = useGameStore()
 	const [shouldDisplayResults, setShouldDisplayResults] = useState(false)
+	const resultsRef = useRef<HTMLDivElement>(null)
 
 	const {
 		timeElapsed,
@@ -166,6 +168,17 @@ const PracticeGameContainer = ({
 		} else setShouldDisplayResults(false)
 	}, [playerStats, startTime, timeElapsed])
 
+	const handleSaveImage = async () => {
+		if (resultsRef.current) {
+			const dataUrl = await htmlToImage.toPng(resultsRef.current)
+			// Download or save the image
+			const link = document.createElement('a')
+			link.download = 'typing-results.png'
+			link.href = dataUrl
+			link.click()
+		}
+	}
+
 	return (
 		<div className='flex flex-col'>
 			{duration !== 0 && (
@@ -219,11 +232,13 @@ const PracticeGameContainer = ({
 					testType={'custom'}
 					startTime={startTime}
 					duration={duration}
+					resultsRef={resultsRef}
 				/>
 				<ResultsGraphToolbar
 					resetGameState={resetGameState}
 					wordResults={wordResults}
 					words={localWords}
+					handleSaveImage={handleSaveImage}
 				/>
 			</div>
 		</div>

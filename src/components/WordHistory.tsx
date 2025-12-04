@@ -104,38 +104,43 @@ const WordHistory = ({
 	}
 
 	return (
-		<div className='w-full gap-2 text-2xl sm:text-4xl sm:gap-4 flex flex-wrap justify-center items-center'>
-			{words.map((word, wordIdx) => {
-				const results = wordResults[wordIdx]
-				return (
-					<span key={wordIdx} className='inline-flex'>
-						{results
-							? results.map((result, charIdx) => {
-									const isVisible = isCharVisible(wordIdx, charIdx)
-									return (
-										<span
-											key={charIdx}
-											className={`${getCharStyle(wordIdx, charIdx, isVisible)} transition-opacity duration-100`}
-											data-word={wordIdx}
-											data-char={charIdx}
-										>
-											{result.typedChar}
-										</span>
-									)
-								})
-							: word.split('').map((char, charIdx) => (
-									<span
-										key={charIdx}
-										className='text-gray-500 opacity-30'
-										data-word={wordIdx}
-										data-char={charIdx}
-									>
-										{char}
-									</span>
-								))}
-					</span>
-				)
-			})}
+		<div className='w-full justify-center items-center'>
+			<div className='w-full flex-col'>
+				<div className='text-sm text-white'>Word {usage}</div>
+				<div className='gap-2 text-2xl sm:text-4xl sm:gap-4 flex flex-wrap'>
+					{words.map((word, wordIdx) => {
+						const results = wordResults[wordIdx]
+						return (
+							<span key={wordIdx} className='inline-flex'>
+								{results
+									? results.map((result, charIdx) => {
+											const isVisible = isCharVisible(wordIdx, charIdx)
+											return (
+												<span
+													key={charIdx}
+													className={`${getCharStyle(wordIdx, charIdx, isVisible)} transition-opacity duration-100`}
+													data-word={wordIdx}
+													data-char={charIdx}
+												>
+													{result.typedChar}
+												</span>
+											)
+										})
+									: word.split('').map((char, charIdx) => (
+											<span
+												key={charIdx}
+												className='text-gray-500 opacity-30'
+												data-word={wordIdx}
+												data-char={charIdx}
+											>
+												{char}
+											</span>
+										))}
+							</span>
+						)
+					})}
+				</div>
+			</div>
 		</div>
 	)
 }

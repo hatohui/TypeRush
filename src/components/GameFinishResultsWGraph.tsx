@@ -13,6 +13,7 @@ import {
 	type PlayerStats,
 	type WordResultType,
 } from '../common/types.ts'
+import type { RefObject } from 'react'
 
 interface GameFinishResultsWGraph {
 	stats: PlayerStats | null
@@ -20,6 +21,7 @@ interface GameFinishResultsWGraph {
 	testType: string
 	startTime: number | null
 	duration: GameDuration
+	resultsRef: RefObject<HTMLDivElement | null>
 }
 
 const GameFinishResultsWGraph = ({
@@ -27,6 +29,7 @@ const GameFinishResultsWGraph = ({
 	wordResults,
 	startTime,
 	duration,
+	resultsRef,
 }: GameFinishResultsWGraph) => {
 	if (!stats || !startTime) return null
 
@@ -97,7 +100,10 @@ const GameFinishResultsWGraph = ({
 	const consistency = Math.max(0, 100 - Math.sqrt(variance))
 
 	return (
-		<div className='w-full flex-col max-w-4xl p-6 bg-[#2c2e31] rounded-lg text-white transition duration-200'>
+		<div
+			ref={resultsRef}
+			className='w-full flex-col max-w-4xl p-6 bg-[#2c2e31] rounded-lg text-white transition duration-200'
+		>
 			<div className='flex'>
 				<div className='flex flex-col gap-8 mb-6'>
 					<div>

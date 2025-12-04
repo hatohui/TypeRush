@@ -13,12 +13,14 @@ interface ResultsGraphToolbarProps {
 	resetGameState: () => void
 	wordResults: Record<number, WordResultType[]>
 	words: string[]
+	handleSaveImage: () => void
 }
 
 const ResultsGraphToolbar = ({
 	resetGameState,
 	wordResults,
 	words,
+	handleSaveImage,
 }: ResultsGraphToolbarProps) => {
 	const [showWordHistory, setShowWordHistory] = useState(false)
 	const [showWordReplay, setShowWordReplay] = useState(false)
@@ -121,7 +123,7 @@ const ResultsGraphToolbar = ({
 						placement='bottom'
 						title={<span className='text-white'>Save result</span>}
 					>
-						<button className='cursor-pointer' onClick={resetGameState}>
+						<button className='cursor-pointer' onClick={handleSaveImage}>
 							<MdOutlineImage className='text-gray-400 size-6 hover:text-white transition-colors' />
 						</button>
 					</Popover>
