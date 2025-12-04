@@ -4,7 +4,7 @@ import {
 	MdReplay,
 	MdOutlineFastRewind,
 } from 'react-icons/md'
-import { Popover } from 'antd'
+import { Tooltip } from 'antd'
 import { useState } from 'react'
 import WordHistory from './WordHistory'
 import type { WordResultType } from '../common/types'
@@ -69,7 +69,7 @@ const ResultsGraphToolbar = ({
 			{/* Toolbar */}
 			<div className='flex max-h-[100px] bg-[#2c2e31] rounded-lg p-4'>
 				<div className='flex w-full gap-20 justify-center items-center'>
-					<Popover
+					<Tooltip
 						color='#1f2937'
 						placement='bottom'
 						title={<span className='text-white mx-auto'>Retry</span>}
@@ -77,8 +77,8 @@ const ResultsGraphToolbar = ({
 						<button className='cursor-pointer' onClick={resetGameState}>
 							<MdReplay className='text-gray-400 size-6 hover:text-white transition-colors' />
 						</button>
-					</Popover>
-					<Popover
+					</Tooltip>
+					<Tooltip
 						color='#1f2937'
 						placement='bottom'
 						title={<span className='text-white'>View word history</span>}
@@ -97,8 +97,8 @@ const ResultsGraphToolbar = ({
 								}`}
 							/>
 						</button>
-					</Popover>
-					<Popover
+					</Tooltip>
+					<Tooltip
 						color='#1f2937'
 						placement='bottom'
 						title={<span className='text-white'>Replay typing</span>}
@@ -117,8 +117,8 @@ const ResultsGraphToolbar = ({
 								}`}
 							/>
 						</button>
-					</Popover>
-					<Popover
+					</Tooltip>
+					<Tooltip
 						color='#1f2937'
 						placement='bottom'
 						title={<span className='text-white'>Save result</span>}
@@ -126,7 +126,7 @@ const ResultsGraphToolbar = ({
 						<button className='cursor-pointer' onClick={handleSaveImage}>
 							<MdOutlineImage className='text-gray-400 size-6 hover:text-white transition-colors' />
 						</button>
-					</Popover>
+					</Tooltip>
 				</div>
 			</div>
 		</div>
