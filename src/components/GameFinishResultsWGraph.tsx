@@ -198,8 +198,14 @@ const GameFinishResultsWGraph = ({
 				</div>
 				<div className='flex gap-8'>
 					<Popover
-						content={<span>WPM: {stats.rawWpm.toFixed(2)}</span>}
-						title='Raw word-per-min'
+						content={
+							<div className='text-sm text-white'>
+								Raw WPM: {stats.rawWpm.toFixed(2)}
+							</div>
+						}
+						color='#1f2937'
+						placement='bottom'
+						title={<span className='text-white'>Raw word-per-min</span>}
 					>
 						<div className='cursor-pointer'>
 							<div className='text-gray-400'>raw</div>
@@ -210,14 +216,16 @@ const GameFinishResultsWGraph = ({
 					</Popover>
 					<Popover
 						content={
-							<div className='text-sm'>
+							<div className='text-sm text-white'>
 								<div>Correct: {stats.correct}</div>
 								<div>Incorrect: {stats.incorrect}</div>
 								<div>Overflow: {stats.overflow}</div>
 								<div>Missed: {stats.missed}</div>
 							</div>
 						}
-						title='Character Breakdown'
+						color='#1f2937'
+						placement='bottom'
+						title={<span className='text-white'>Character Breakdown</span>}
 					>
 						<div className='cursor-pointer'>
 							<div className='text-gray-400'>characters</div>
@@ -229,12 +237,14 @@ const GameFinishResultsWGraph = ({
 					</Popover>
 					<Popover
 						content={
-							<div className='text-sm'>
+							<div className='text-sm text-white'>
 								Measures how stable your typing speed is throughout the test.
 								Higher is better.
 							</div>
 						}
-						title='Consistency'
+						color='#1f2937'
+						placement='bottom'
+						title={<span className='text-white'>Consistency</span>}
 					>
 						<div className='cursor-pointer'>
 							<div className='text-gray-400'>consistency</div>
@@ -245,11 +255,13 @@ const GameFinishResultsWGraph = ({
 					</Popover>
 					<Popover
 						content={
-							<div className='text-sm'>
+							<div className='text-sm text-white'>
 								Total time taken to complete the test
 							</div>
 						}
-						title='Time'
+						color='#1f2937'
+						placement='bottom'
+						title={<span className='text-white'>Time</span>}
 					>
 						<div className='cursor-pointer'>
 							<div className='text-gray-400'>time</div>

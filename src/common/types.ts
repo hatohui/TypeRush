@@ -191,6 +191,7 @@ export type CharacterStateType =
 
 export type WordResultType = {
 	char: string
+	typedChar: string
 	state: CharacterStateType
 	timestamp: number
 }

@@ -16,6 +16,7 @@ import useCaretAnimation from '../hooks/useCaretAnimation.ts'
 import TypingArea from './TypingArea.tsx'
 import { useGameStore } from '../stores/useGameStore.ts'
 import GameFinishResultsWGraph from './GameFinishResultsWGraph.tsx'
+import ResultsGraphToolbar from './ResultsGraphToolbar.tsx'
 
 gsap.registerPlugin(Flip)
 
@@ -50,6 +51,7 @@ const PracticeGameContainer = ({
 		localWords,
 		onKeyDownPracticeMode,
 		getCharStyle,
+		handleSpacePress,
 	} = useTypingLogic(words)
 	const { calculateStats } = useTypingStats(wordResults, timeElapsed)
 
@@ -81,6 +83,7 @@ const PracticeGameContainer = ({
 			}
 
 			const stats = calculateStats(completeWordResults)
+			handleSpacePress(true)
 			setPlayerStats(stats)
 			stopTimer()
 		}
@@ -94,6 +97,7 @@ const PracticeGameContainer = ({
 		typed,
 		wordResults,
 		words,
+		handleSpacePress,
 	])
 
 	// Check if finished typing all words
@@ -114,6 +118,7 @@ const PracticeGameContainer = ({
 
 			// Calculate stats with complete data
 			const stats = calculateStats(completeWordResults)
+			handleSpacePress(true)
 			setPlayerStats(stats)
 			stopTimer()
 		}
@@ -127,6 +132,7 @@ const PracticeGameContainer = ({
 		resetTimer,
 		stopTimer,
 		timerRef,
+		handleSpacePress,
 	])
 
 	//Reset game when duration changes
@@ -186,7 +192,7 @@ const PracticeGameContainer = ({
 			</div>
 
 			<div
-				className={`transition-opacity justify-center items-center duration-200 ${shouldDisplayResults ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+				className={`transition-opacity z-50 justify-center items-center duration-200 ${shouldDisplayResults ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
 			>
 				<GameFinishResultsWGraph
 					stats={playerStats}
@@ -194,6 +200,11 @@ const PracticeGameContainer = ({
 					testType={'custom'}
 					startTime={startTime}
 					duration={duration}
+				/>
+				<ResultsGraphToolbar
+					resetGameState={resetGameState}
+					wordResults={wordResults}
+					words={localWords}
 				/>
 			</div>
 

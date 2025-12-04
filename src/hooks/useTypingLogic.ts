@@ -41,6 +41,7 @@ export const buildWordResult = (
 
 		return {
 			char: char,
+			typedChar: typed[idx],
 			state: charStatus,
 			timestamp: Date.now(),
 		} as WordResultType
@@ -52,6 +53,7 @@ export const buildWordResult = (
 		for (let i = 0; i < overflowCount; i++) {
 			currentResults.push({
 				char: typed[word.length + i],
+				typedChar: typed[word.length + i],
 				state: CharacterState.OVERFLOW,
 				timestamp: Date.now(),
 			})
