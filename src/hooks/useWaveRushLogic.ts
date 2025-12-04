@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, type RefObject } from 'react'
 import type {
-	SingleplayerResultType,
+	PlayerStats,
 	WaveRushRoundResultType,
 	WordResultType,
 } from '../common/types.ts'
@@ -88,7 +88,7 @@ export const useWaveRushRound = ({
 
 			const stats = calculateStats(completeWordResults)
 			waveRushMode?.onRoundComplete({
-				...(stats as SingleplayerResultType),
+				...(stats as PlayerStats),
 				playerId: socket.id,
 				timeElapsed: gameTime,
 			})

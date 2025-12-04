@@ -40,8 +40,8 @@ const useCaretAnimation = ({
 				const state = Flip.getState(caretElement)
 				target.parentNode?.insertBefore(caretElement, target)
 				Flip.from(state, {
-					duration: 0.4,
-					ease: 'power1.inOut',
+					duration: 0.15,
+					ease: 'none',
 				})
 			}
 			return
@@ -57,7 +57,7 @@ const useCaretAnimation = ({
 		target.appendChild(caretElement)
 		Flip.from(state, {
 			duration: 0.15,
-			ease: 'power1.inOut',
+			ease: 'none',
 		})
 	}, [currentWordIdx, caretIdx, isMultiplayer])
 
@@ -162,7 +162,7 @@ const useCaretAnimation = ({
 					const state = Flip.getState(caretElement)
 					target.parentNode?.insertBefore(caretElement, target)
 					Flip.from(state, {
-						duration: 0.4,
+						duration: 0.3,
 						ease: 'power1.inOut',
 					})
 				}
@@ -178,7 +178,7 @@ const useCaretAnimation = ({
 			const state = Flip.getState(caretElement)
 			target.appendChild(caretElement)
 			Flip.from(state, {
-				duration: 0.4,
+				duration: 0.3,
 				ease: 'power1.inOut',
 			})
 		})

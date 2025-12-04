@@ -92,6 +92,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 		)
 
 		socket.on('gameFinished', () => {
+			console.log('game finish')
 			set({ displayFinishModal: true, isGameStarted: false })
 		})
 

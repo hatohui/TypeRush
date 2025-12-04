@@ -37,7 +37,16 @@ const useTypingStats = (
 			// Raw WPM: all typed characters (correct + incorrect + overflow)
 			const rawWpm = timeInMinutes > 0 ? totalTyped / 5 / timeInMinutes : 0
 
-			return { accuracy, wpm, rawWpm, correct, incorrect, overflow, missed }
+			return {
+				accuracy,
+				wpm,
+				rawWpm,
+				correct,
+				incorrect,
+				overflow,
+				missed,
+				timeElapsed,
+			}
 		},
 		[wordResults, timeElapsed]
 	)

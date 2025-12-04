@@ -5,7 +5,7 @@ import { Flip } from 'gsap/Flip'
 import {
 	PlayerColor,
 	type GameDuration,
-	type SingleplayerResultType,
+	type PlayerStats,
 } from '../common/types.ts'
 import { TbReload } from 'react-icons/tb'
 import CountdownProgress from './CountdownProgress.tsx'
@@ -28,7 +28,7 @@ const PracticeGameContainer = ({
 	words,
 	duration,
 }: PracticeGameContainerProps) => {
-	const [results, setResults] = useState<null | SingleplayerResultType>(null)
+	const [playerStats, setPlayerStats] = useState<null | PlayerStats>(null)
 	const { setShouldHideUI } = useGameStore()
 	const [shouldDisplayResults, setShouldDisplayResults] = useState(false)
 
@@ -56,7 +56,7 @@ const PracticeGameContainer = ({
 	const resetGameState = useCallback(() => {
 		resetTypingState()
 		resetTimer()
-		setResults(null)
+		setPlayerStats(null)
 		setShouldDisplayResults(false)
 	}, [resetTimer, resetTypingState])
 
@@ -81,7 +81,7 @@ const PracticeGameContainer = ({
 			}
 
 			const stats = calculateStats(completeWordResults)
-			setResults(stats)
+			setPlayerStats(stats)
 			stopTimer()
 		}
 	}, [
@@ -114,7 +114,7 @@ const PracticeGameContainer = ({
 
 			// Calculate stats with complete data
 			const stats = calculateStats(completeWordResults)
-			setResults(stats)
+			setPlayerStats(stats)
 			stopTimer()
 		}
 	}, [
@@ -133,7 +133,7 @@ const PracticeGameContainer = ({
 	useEffect(() => {
 		resetTypingState()
 		resetTimer()
-		setResults(null)
+		setPlayerStats(null)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [duration])
 
@@ -146,10 +146,10 @@ const PracticeGameContainer = ({
 	})
 
 	useEffect(() => {
-		if (results && timeElapsed && startTime) {
+		if (playerStats && timeElapsed && startTime) {
 			setShouldDisplayResults(true)
 		} else setShouldDisplayResults(false)
-	}, [results, startTime, timeElapsed])
+	}, [playerStats, startTime, timeElapsed])
 
 	return (
 		<div className='flex flex-col'>
@@ -189,20 +189,21 @@ const PracticeGameContainer = ({
 				className={`transition-opacity justify-center items-center duration-200 ${shouldDisplayResults ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
 			>
 				<GameFinishResultsWGraph
-					stats={results}
+					stats={playerStats}
 					wordResults={wordResults}
 					testType={'custom'}
-					timeElapsed={timeElapsed}
 					startTime={startTime}
 					duration={duration}
 				/>
 			</div>
 
-			<div className='w-full flex justify-center items-center'>
-				<button className='mt-[50px] cursor-pointer' onClick={resetGameState}>
-					<TbReload className='text-gray-400 size-12' />
-				</button>
-			</div>
+			{!shouldDisplayResults && (
+				<div className='w-full z-50 flex justify-center items-center'>
+					<button className='mt-[50px] cursor-pointer' onClick={resetGameState}>
+						<TbReload className='text-gray-400 size-12' />
+					</button>
+				</div>
+			)}
 		</div>
 	)
 }

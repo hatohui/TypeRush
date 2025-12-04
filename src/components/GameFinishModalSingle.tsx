@@ -1,4 +1,4 @@
-import type { SingleplayerResultType } from '../common/types.ts'
+import type { PlayerStats } from '../common/types.ts'
 import React from 'react'
 import { Modal } from 'antd'
 
@@ -6,7 +6,7 @@ interface GameFinishModalPracticeProps {
 	onCancel: (isBetweenRounds: boolean) => void
 	footer: React.ReactNode
 	title: string
-	results: SingleplayerResultType | null
+	playerStats: PlayerStats | null
 	isMultiplayer: boolean
 	position?: number | null
 }
@@ -15,26 +15,27 @@ const GameFinishModalSingle = ({
 	onCancel,
 	footer,
 	title,
-	results,
+	playerStats,
 	isMultiplayer,
 	position,
 }: GameFinishModalPracticeProps) => {
 	return (
 		<Modal
-			open={!!results}
+			open={!!playerStats}
 			onCancel={() => onCancel(false)}
 			footer={[footer]}
 			title={title}
 		>
-			{results && (
+			{playerStats && (
 				<div>
-					<p>Accuracy: {results.accuracy.toFixed(1)}%</p>
-					<p>WPM: {results.wpm.toFixed(1)}</p>
-					<p>Raw WPM: {results.rawWpm.toFixed(1)}</p>
-					<p>Correct chars: {results.correct}</p>
-					<p>Incorrect chars: {results.incorrect}</p>
-					<p>Overflow chars: {results.overflow}</p>
-					<p>Missed chars: {results.missed}</p>
+					<p>Accuracy: {playerStats.accuracy.toFixed(1)}%</p>
+					<p>WPM: {playerStats.wpm.toFixed(1)}</p>
+					<p>Raw WPM: {playerStats.rawWpm.toFixed(1)}</p>
+					<p>Correct chars: {playerStats.correct}</p>
+					<p>Incorrect chars: {playerStats.incorrect}</p>
+					<p>Overflow chars: {playerStats.overflow}</p>
+					<p>Missed chars: {playerStats.missed}</p>
+					<p>Time elapsed: {playerStats.timeElapsed}</p>
 				</div>
 			)}
 			{isMultiplayer && typeof position === 'number' && (

@@ -31,14 +31,6 @@ export type GameConfig =
 			timeBetweenRounds: number
 	  }
 
-export interface PlayerStats {
-	accuracy: number
-	wpm: number
-	rawWpm: number
-	correct: number
-	incorrect: number
-}
-
 export interface TypeRaceGameResultEntry {
 	playerId: string
 	stats: PlayerStats
@@ -203,7 +195,7 @@ export type WordResultType = {
 	timestamp: number
 }
 
-export type SingleplayerResultType = {
+export type PlayerStats = {
 	accuracy: number
 	wpm: number
 	rawWpm: number
@@ -211,9 +203,10 @@ export type SingleplayerResultType = {
 	incorrect: number
 	overflow: number
 	missed: number
+	timeElapsed: number
 }
 
-export type WaveRushRoundResultType = SingleplayerResultType & {
+export type WaveRushRoundResultType = PlayerStats & {
 	playerId: string
 	timeElapsed: number
 }

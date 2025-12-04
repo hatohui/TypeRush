@@ -7,7 +7,7 @@ import { Flip } from 'gsap/Flip'
 import {
 	type MultiplayerMode,
 	PlayerColor,
-	type SingleplayerResultType,
+	type PlayerStats,
 	type WaveRushRoundResultType,
 } from '../common/types.ts'
 import GameFinishModalSingle from './GameFinishModalSingle.tsx'
@@ -67,7 +67,7 @@ const MultiplayerGameContainer = ({
 		onKeyDownMultiplayer,
 		handleSpacePress,
 	} = useTypingLogic(words, mistakeAnimationRef)
-	const [results, setResults] = useState<null | SingleplayerResultType>(null)
+	const [playerStats, setPlayerStats] = useState<null | PlayerStats>(null)
 
 	const getPlayerColor = (playerIndex: number) => {
 		const colors = [
@@ -100,7 +100,7 @@ const MultiplayerGameContainer = ({
 		(isBetweenRounds: boolean) => {
 			resetTypingState()
 			if (!isBetweenRounds) resetGameTimer()
-			setResults(null)
+			setPlayerStats(null)
 			resetPlayersCaret()
 		},
 		[resetTypingState, resetGameTimer, resetPlayersCaret]
@@ -148,7 +148,7 @@ const MultiplayerGameContainer = ({
 			// Commit the final word to state for consistency
 			handleSpacePress(true)
 
-			setResults(stats)
+			setPlayerStats(stats)
 			stopGameTimer()
 			handlePlayerFinish(roomId, stats)
 		}
@@ -276,7 +276,7 @@ const MultiplayerGameContainer = ({
 				/>
 			</div>
 
-			{results && (
+			{playerStats && (
 				<GameFinishModalSingle
 					onCancel={resetGameState}
 					footer={[
@@ -286,7 +286,7 @@ const MultiplayerGameContainer = ({
 					]}
 					title='Your Results'
 					isMultiplayer={true}
-					results={results}
+					playerStats={playerStats}
 					position={position}
 				/>
 			)}
