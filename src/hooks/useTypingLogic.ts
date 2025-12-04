@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import {
 	BlockedKeysSet,
 	CharacterState,
@@ -14,6 +14,7 @@ export const buildFinalWordResult = (
 	typed: string,
 	timestamps: number[]
 ): WordResultType[] => {
+	console.log(timestamps)
 	return word.split('').map((char, idx) => {
 		return {
 			char: char,
@@ -80,8 +81,8 @@ const useTypingLogic = (
 	const [wordResults, setWordResults] = useState<
 		Record<number, WordResultType[]>
 	>({})
-	// Track timestamps for each character as they're typed
-	const [charTimestamps, setCharTimestamps] = useState<number[]>([])
+	// Track timestamps for each character as they're typed (using ref to avoid re-renders)
+	const charTimestampsRef = useRef<number[]>([])
 
 	const handleSpacePress = (isFinish: boolean) => {
 		if (typed.trim() === '') return
@@ -89,7 +90,7 @@ const useTypingLogic = (
 		const currentResults = buildWordResult(
 			words[currentWordIdx],
 			typed,
-			charTimestamps
+			charTimestampsRef.current
 		)
 
 		setWordResults(prev => ({
@@ -105,7 +106,7 @@ const useTypingLogic = (
 				return nextIdx
 			})
 			setTyped('')
-			setCharTimestamps([])
+			charTimestampsRef.current = []
 		}
 	}
 
@@ -116,7 +117,7 @@ const useTypingLogic = (
 		setWordResults({})
 		setCaretIdx(-1)
 		setLocalWords(words)
-		setCharTimestamps([])
+		charTimestampsRef.current = []
 	}, [words])
 
 	const getCharStyle = (wordIdx: number, idx: number, char: string) => {
@@ -127,14 +128,13 @@ const useTypingLogic = (
 				state =
 					storedResults[idx].state === CharacterState.CORRECT
 						? 'text-white'
-						: storedResults[idx].state === CharacterState.INCORRECT ||
-							  CharacterState.OVERFLOW
+						: storedResults[idx].state === CharacterState.INCORRECT
 							? 'text-red-500 underline'
-							: ''
+							: 'text-red-800 underline'
 			}
 		} else if (wordIdx === currentWordIdx) {
 			if (idx >= words[currentWordIdx].length) {
-				state = 'text-red-500'
+				state = 'text-red-800'
 			} else if (idx < typed.length) {
 				state = typed[idx] === char ? 'text-white' : 'text-red-500'
 			}
@@ -174,7 +174,7 @@ const useTypingLogic = (
 					const newLength = typed.length - 1
 					setCaretIdx(prev => Math.max(-1, prev - 1))
 					setTyped(prev => prev.slice(0, -1))
-					setCharTimestamps(prev => prev.slice(0, -1))
+					charTimestampsRef.current = charTimestampsRef.current.slice(0, -1)
 
 					if (newLength >= words[currentWordIdx].length) {
 						const newWord = localWords[currentWordIdx].slice(0, newLength)
@@ -202,7 +202,7 @@ const useTypingLogic = (
 
 			setCaretIdx(prev => prev + 1)
 			setTyped(prev => prev + e.key)
-			setCharTimestamps(prev => [...prev, Date.now()])
+			charTimestampsRef.current.push(Date.now())
 
 			if (!startTime) setStartTime(Date.now())
 		}
@@ -226,7 +226,7 @@ const useTypingLogic = (
 			if (typed.length > 0) {
 				setCaretIdx(prev => Math.max(-1, prev - 1))
 				setTyped(prev => prev.slice(0, -1))
-				setCharTimestamps(prev => prev.slice(0, -1))
+				charTimestampsRef.current = charTimestampsRef.current.slice(0, -1)
 			}
 			return
 		}
@@ -235,7 +235,7 @@ const useTypingLogic = (
 		if (nextChar && nextChar === e.key) {
 			setCaretIdx(prev => prev + 1)
 			setTyped(prev => prev + e.key)
-			setCharTimestamps(prev => [...prev, Date.now()])
+			charTimestampsRef.current.push(Date.now())
 		} else {
 			animationRef?.current?.()
 			e.preventDefault()
@@ -261,7 +261,7 @@ const useTypingLogic = (
 		getCharStyle,
 		onKeyDownMultiplayer,
 		isBlockedKey,
-		charTimestamps,
+		charTimestampsRef,
 	}
 }
 

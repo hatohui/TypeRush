@@ -85,7 +85,7 @@ const WordHistory = ({
 			case CharacterState.INCORRECT:
 				return 'text-red-500 underline'
 			case CharacterState.OVERFLOW:
-				return 'text-red-500 underline'
+				return 'text-red-800 underline'
 			case CharacterState.UNTYPED:
 				return 'text-gray-500'
 			default:

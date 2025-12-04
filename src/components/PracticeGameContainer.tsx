@@ -52,7 +52,7 @@ const PracticeGameContainer = ({
 		onKeyDownPracticeMode,
 		getCharStyle,
 		handleSpacePress,
-		charTimestamps,
+		charTimestampsRef,
 	} = useTypingLogic(words)
 	const { calculateStats } = useTypingStats(wordResults, timeElapsed)
 
@@ -78,7 +78,7 @@ const PracticeGameContainer = ({
 			const finalWordResult = buildWordResult(
 				words[currentWordIdx],
 				typed,
-				charTimestamps
+				charTimestampsRef.current
 			)
 
 			// Create complete wordResults with final word
@@ -116,7 +116,7 @@ const PracticeGameContainer = ({
 			const finalWordResult = buildWordResult(
 				words[currentWordIdx],
 				typed,
-				charTimestamps
+				charTimestampsRef.current
 			)
 
 			// Create complete wordResults with final word

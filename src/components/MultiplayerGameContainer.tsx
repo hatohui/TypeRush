@@ -66,7 +66,7 @@ const MultiplayerGameContainer = ({
 		getCharStyle,
 		onKeyDownMultiplayer,
 		handleSpacePress,
-		charTimestamps,
+		charTimestampsRef,
 	} = useTypingLogic(words, mistakeAnimationRef)
 	const [playerStats, setPlayerStats] = useState<null | PlayerStats>(null)
 
@@ -138,7 +138,7 @@ const MultiplayerGameContainer = ({
 			const finalWordResult = buildFinalWordResult(
 				words[currentWordIdx],
 				typed,
-				charTimestamps
+				charTimestampsRef.current
 			)
 
 			// Create complete wordResults with final word
