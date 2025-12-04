@@ -198,10 +198,20 @@ const PracticeGameContainer = ({
 					onKeyDown={e => onKeyDownPracticeMode(e, startTime, setStartTime)}
 					getCharStyle={getCharStyle}
 				/>
+				{!shouldDisplayResults && (
+					<div className='w-full z-50 flex justify-center items-center'>
+						<button
+							className='mt-[50px] cursor-pointer'
+							onClick={resetGameState}
+						>
+							<TbReload className='text-gray-400 size-12' />
+						</button>
+					</div>
+				)}
 			</div>
 
 			<div
-				className={`transition-opacity z-50 justify-center items-center duration-200 ${shouldDisplayResults ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+				className={`mt-[-200px] transition-opacity z-50 justify-center items-center duration-200 ${shouldDisplayResults ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
 			>
 				<GameFinishResultsWGraph
 					stats={playerStats}
@@ -216,14 +226,6 @@ const PracticeGameContainer = ({
 					words={localWords}
 				/>
 			</div>
-
-			{!shouldDisplayResults && (
-				<div className='w-full z-50 flex justify-center items-center'>
-					<button className='mt-[50px] cursor-pointer' onClick={resetGameState}>
-						<TbReload className='text-gray-400 size-12' />
-					</button>
-				</div>
-			)}
 		</div>
 	)
 }

@@ -11,16 +11,14 @@ import { MAX_OVERFLOW } from '../common/constant.ts'
 // Utility function to build final word result for stats calculation (multiplayer mode)
 export const buildFinalWordResult = (
 	word: string,
-	typed: string,
-	timestamps: number[]
+	typed: string
 ): WordResultType[] => {
-	console.log(timestamps)
 	return word.split('').map((char, idx) => {
 		return {
 			char: char,
 			state:
 				typed[idx] === char ? CharacterState.CORRECT : CharacterState.INCORRECT,
-			timestamp: timestamps[idx] || Date.now(),
+			timestamp: Date.now(),
 		} as WordResultType
 	})
 }
