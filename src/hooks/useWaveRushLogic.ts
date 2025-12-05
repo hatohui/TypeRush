@@ -15,7 +15,8 @@ export const useWaveRushGame = (words: string[][]) => {
 		roomId,
 	} = useGameStore()
 	const currentRound = roundResults.currentRound
-	const currentWords = words[roundResults.currentRound]
+	const currentWords =
+		words[Math.min(roundResults.currentRound, words.length - 1)]
 	const isLastRound = roundResults.currentRound === words.length - 1
 
 	const handleRoundComplete = useCallback(

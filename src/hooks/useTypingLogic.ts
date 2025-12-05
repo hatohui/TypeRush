@@ -16,10 +16,11 @@ export const buildFinalWordResult = (
 	return word.split('').map((char, idx) => {
 		return {
 			char: char,
+			typedChar: char[idx] ?? '',
 			state:
 				typed[idx] === char ? CharacterState.CORRECT : CharacterState.INCORRECT,
 			timestamp: Date.now(),
-		} as WordResultType
+		}
 	})
 }
 

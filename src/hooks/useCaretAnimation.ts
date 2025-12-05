@@ -139,7 +139,7 @@ const useCaretAnimation = ({
 
 	// Animate opponent carets
 	useEffect(() => {
-		if (!socket || !isMultiplayer || !socket || !players) return
+		if (!isMultiplayer || !socket || !players) return
 
 		const otherPlayers = players.filter(p => p.id !== socket.id)
 

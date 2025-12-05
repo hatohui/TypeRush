@@ -92,7 +92,6 @@ export const useGameStore = create<GameState>((set, get) => ({
 		)
 
 		socket.on('gameFinished', () => {
-			console.log('game finish')
 			set({ displayFinishModal: true, isGameStarted: false })
 		})
 
@@ -172,13 +171,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 		// ✅ Server tells clients to start transition
 		socket.on('startTransition', () => {
-			console.log('📢 Server: Start transition')
 			set({ isTransitioning: true })
 		})
 
 		// ✅ Server tells clients next round started
 		socket.on('nextRoundStarted', () => {
-			console.log('📢 Server: Next round started')
 			set({ isTransitioning: false })
 		})
 	},

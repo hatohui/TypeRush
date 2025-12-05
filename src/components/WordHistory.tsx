@@ -19,8 +19,6 @@ const WordHistory = ({
 		charIdx: number
 	}>({ wordIdx: 0, charIdx: -1 })
 
-	console.log('word results', wordResults)
-
 	useEffect(() => {
 		if (usage !== 'replay' || !isPlaying) {
 			setReplayProgress({ wordIdx: 0, charIdx: -1 })
