@@ -1,13 +1,20 @@
 @import 'tailwindcss';
 
 @layer utilities {
-	.center {
+	.center-horizontal {
 		@apply flex justify-center items-center;
 	}
+    .center-vertical {
+        @apply flex flex-col justify-center items-center;
+    }
+    .min-w-outer-container {
+        @apply min-w-[450px];
+    }
 }
 
-body {
+#root, body {
     background-color: #383A3E;
+    height: 100vh;
 }
 
 @keyframes blink {

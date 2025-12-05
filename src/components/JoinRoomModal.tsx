@@ -26,6 +26,7 @@ const JoinRoomModal = ({
 			title='Join or Create Room'
 			footer={null}
 			confirmLoading={confirmLoading}
+			closable={false}
 		>
 			<Form
 				form={form}

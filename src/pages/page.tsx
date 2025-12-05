@@ -1,8 +1,6 @@
 import React from 'react'
-import GameCanvas from '../components/GameCanvas'
-
 const LandingPage = (): React.JSX.Element => {
-	return <GameCanvas />
+	return <div>Landing Page</div>
 }
 
 export default LandingPage
