@@ -83,9 +83,9 @@ const LeaderboardPage: React.FC = () => {
 									<div className='entry-rank'>#{index + 1}</div>
 									<div className='entry-name'>{entry.user.playerName}</div>
 									<div className='entry-stats'>
-										{''}
+										{' '}
 										WPM: {entry.wpm} | Raw: {entry.rawWpm} | ACC: {entry.accuracy}% | Date:
-										{''}
+										{' '}
 										{entry.recordedAt.toLocaleDateString()}
 									</div>
 								</div>
