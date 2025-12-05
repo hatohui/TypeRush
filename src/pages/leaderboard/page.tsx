@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Container from '../../components/Container'
-import type { LeaderboardData, LeaderboardEntry } from '../../common/types'
+import type { LeaderboardData } from '../../common/types'
 
 type LeaderboardType = 'all_time'
 type LeaderboardMode = 15 | 30 | 60
@@ -84,8 +84,8 @@ const LeaderboardPage: React.FC = () => {
 									<div className='entry-name'>{entry.user.playerName}</div>
 									<div className='entry-stats'>
 										{' '}
-										WPM: {entry.wpm} | Raw: {entry.rawWpm} | ACC: {entry.accuracy}% | Date:
-										{' '}
+										WPM: {entry.wpm} | Raw: {entry.rawWpm} | ACC:{' '}
+										{entry.accuracy}% | Date:{' '}
 										{entry.recordedAt.toLocaleDateString()}
 									</div>
 								</div>
