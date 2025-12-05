@@ -232,3 +232,20 @@ export interface LobbySettingsFormProps {
 	onModeChange: (mode: MultiplayerMode) => void
 	onSubmit: (values: FieldType) => void
 }
+
+export interface LeaderboardEntry {
+	user: {
+		id: string
+		playerName: string
+	}
+	accuracy: number
+	wpm: number
+	rawWpm: number
+	mode: number
+	recordedAt: Date
+}
+
+export interface LeaderboardData {
+	entries: LeaderboardEntry[]
+	totalEntries: number
+}
