@@ -17,7 +17,7 @@ const PlayerPositions = () => {
 	const { waveRushGameResult, players } = useGameStore()
 	const containerRef = useRef<HTMLDivElement>(null)
 	const prevOrderRef = useRef<string>('')
-	const stateRef = useRef<any>(null)
+	const stateRef = useRef<Flip.FlipState>(null)
 
 	const processedResults = React.useMemo(() => {
 		if (
